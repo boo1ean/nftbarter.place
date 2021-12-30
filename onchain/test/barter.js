@@ -149,3 +149,9 @@ describe("Bartering", () => {
 		await contract.connect(owner).setApprovalForAll(operator, true)
 	}
 })
+
+// set and check fee
+// wrong fee
+// wrong nfts side1
+// missing approval side0
+// missing approval side1

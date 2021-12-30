@@ -3,10 +3,13 @@ pragma solidity ^0.8.2;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract BarterPlace {
+contract BarterPlace is Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _offerIdCounter;
+    
+    uint256 offerFee;
     
     enum OfferStatus {
         Pending,
@@ -40,6 +43,18 @@ contract BarterPlace {
     event OfferCreated(uint offerId, address side0, address side1);
     event OfferAccepted(uint offerId, address side0, address side1);
     event OfferCanceled(uint offerId, address side0, address side1);
+    
+    constructor () Ownable () {
+        
+    } 
+    
+    function setOfferFee (uint256 newOfferFee) public onlyOwner {
+        offerFee = newOfferFee;
+    }
+    
+    function withdrawBalance (address payable to) public payable onlyOwner {
+        to.transfer(address(this).balance);
+    }
 
     // Barter between side0 and side1 addresses
     // side0 - msg.sender
@@ -51,9 +66,11 @@ contract BarterPlace {
     function createOffer (
         address side1,
         BarterAsset[] calldata side0Assets,
-        BarterAsset[] calldata side1Assets) public {
+        BarterAsset[] calldata side1Assets) payable public {
         address side0 = msg.sender;
 
+        require(msg.value >= offerFee, "Invalid create offer fee amount");
+    
         uint256 offerId = _offerIdCounter.current();
         
         offersById[offerId].status = OfferStatus.Pending;
