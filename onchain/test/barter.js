@@ -7,11 +7,12 @@ describe("Bartering", () => {
 	let NFT2Contract
 	let erc201Contract
 	let erc202Contract
+	let erc1155Contract
     let barterContract
     let signers
 	let owner
 
-	before(async () => {
+	beforeEach(async () => {
 		const ERC201 = await ethers.getContractFactory('ERC201')
 		erc201Contract = await ERC201.deploy()
 		await erc201Contract.deployed()
@@ -27,6 +28,10 @@ describe("Bartering", () => {
 		const NFT2 = await ethers.getContractFactory('NFT2')
 		NFT2Contract = await NFT2.deploy()
 		await NFT2Contract.deployed()
+
+		const ERC1155 = await ethers.getContractFactory('NFT1155')
+		erc1155Contract = await ERC1155.deploy()
+		await erc1155Contract.deployed()
 
 		const BarterPlace = await ethers.getContractFactory('BarterPlace')
 		barterContract = await BarterPlace.deploy()
@@ -49,6 +54,8 @@ describe("Bartering", () => {
 			side0Assets,
 			side1Assets
 		)).wait()
+		console.log(result)
+		return
 
         expect(result.events.length).to.be.equal(1)
 
@@ -130,6 +137,116 @@ describe("Bartering", () => {
 			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side1.address)
 		}
 	})
+	
+	it('ERC20 swaps', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const amount = 10000
+		const side0Assets = [await mintERC20(erc201Contract, side0.address, amount)]
+		const side1Assets = [await mintERC20(erc202Contract, side1.address, amount)]
+		
+		await approveERC20(erc201Contract, side0, barterContract, amount)
+		await approveERC20(erc202Contract, side1, barterContract, amount)
+
+		const results = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets
+		)).wait()
+
+		const offerId = results.events[0].args.offerId
+		await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+
+		expect(await erc201Contract.balanceOf(side1.address)).to.be.equal(amount)
+		expect(await erc201Contract.balanceOf(side0.address)).to.be.equal(0)
+		
+		expect(await erc202Contract.balanceOf(side0.address)).to.be.equal(amount)
+		expect(await erc202Contract.balanceOf(side1.address)).to.be.equal(0)
+	})
+	
+	it('NFT to ERC20', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const amount = 10000
+		const side0Assets = [await mintERC20(erc201Contract, side0.address, amount)]
+		await approveERC20(erc201Contract, side0, barterContract, amount)
+		
+		const side1Assets = await mintNFT(NFT1Contract, side1.address, 2)
+		await approveNFTS(side1, barterContract.address, NFT1Contract)
+
+		const results = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets
+		)).wait()
+
+		const offerId = results.events[0].args.offerId
+		await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+
+		expect(await erc201Contract.balanceOf(side1.address)).to.be.equal(amount)
+		expect(await erc201Contract.balanceOf(side0.address)).to.be.equal(0)
+
+		for (const asset of side1Assets) {
+			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side0.address)
+		}
+	})
+	
+	it('ERC20 to NFT', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const amount = 10000
+		const side1Assets = [await mintERC20(erc201Contract, side1.address, amount)]
+		await approveERC20(erc201Contract, side1, barterContract, amount)
+
+		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
+		await approveNFTS(side0, barterContract.address, NFT1Contract)
+
+		const results = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets
+		)).wait()
+
+		const offerId = results.events[0].args.offerId
+		await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+
+		expect(await erc201Contract.balanceOf(side0.address)).to.be.equal(amount)
+		expect(await erc201Contract.balanceOf(side1.address)).to.be.equal(0)
+
+		for (const asset of side0Assets) {
+			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side1.address)
+		}
+	})
+	
+	it('ERC1155 to ERC1155', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const amount = 3
+		const side0Assets = await mintNFT1155(erc1155Contract, side0.address, 1, amount)
+		const side1Assets = await mintNFT1155(erc1155Contract, side1.address, 2, amount)
+		await approveNFTS1155(side0, barterContract.address, erc1155Contract)
+		await approveNFTS1155(side1, barterContract.address, erc1155Contract)
+
+		const results = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets
+		)).wait()
+
+		const offerId = results.events[0].args.offerId
+		const acceptResults = await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+
+		for (const asset of side0Assets) {
+			expect(await erc1155Contract.balanceOf(side1.address, asset.tokenId)).to.be.eq(amount)
+		}
+		for (const asset of side1Assets) {
+			expect(await erc1155Contract.balanceOf(side0.address, asset.tokenId)).to.be.eq(amount)
+		}
+	})
 
 	async function mintNFT (contract, to, count) {
     	const results = []
@@ -140,12 +257,43 @@ describe("Bartering", () => {
 				contractAddress: contract.address,
 				tokenId,
 				assetType: 0,
+				amount: 0,
 			})
 		}
 		return results
 	}
 
+	async function mintNFT1155 (contract, to, id, amount) {
+		const results = []
+		await (await contract.mint(to, id, amount, [])).wait()
+		results.push({
+			contractAddress: contract.address,
+			tokenId: id,
+			assetType: 2,
+			amount: amount,
+		})
+		return results
+	}
+
+	async function mintERC20 (contract, to, amount) {
+		await contract.mint(to, amount)
+		return {
+			contractAddress: contract.address,
+			tokenId: 0,
+			assetType: 1,
+			amount: amount,
+		}
+	}
+
 	async function approveNFTS (owner, operator, contract) {
 		await contract.connect(owner).setApprovalForAll(operator, true)
+	}
+	
+	async function approveNFTS1155 (owner, operator, contract) {
+		await contract.connect(owner).setApprovalForAll(operator, true)
+	}
+	
+	async function approveERC20 (contract, owner, operator, amount) {
+		await contract.connect(owner).approve(operator.address, amount);
 	}
 })

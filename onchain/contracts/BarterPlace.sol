@@ -2,6 +2,8 @@
 pragma solidity ^0.8.2;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
+import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "@openzeppelin/contracts/interfaces/IERC1155.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract BarterPlace {
@@ -16,13 +18,15 @@ contract BarterPlace {
     
     enum BarterAssetType {
         ERC721,
-        ERC20
+        ERC20,
+        ERC1155
     }
 
     struct BarterAsset {
         address contractAddress;
         uint256 tokenId;
         BarterAssetType assetType;
+        uint256 amount;
     }
     
     struct BarterOffer {
@@ -105,6 +109,12 @@ contract BarterPlace {
             if (assets[i].assetType == BarterAssetType.ERC721) {
                 IERC721 erc721Contract = IERC721(assets[i].contractAddress);
                 erc721Contract.safeTransferFrom(from, to, assets[i].tokenId);
+            } else if (assets[i].assetType == BarterAssetType.ERC20) {
+                IERC20 erc20Contract = IERC20(assets[i].contractAddress);
+                erc20Contract.transferFrom(from, to, assets[i].amount);
+            } else if (assets[i].assetType == BarterAssetType.ERC1155) {
+                IERC1155 erc1155Contract = IERC1155(assets[i].contractAddress);
+                erc1155Contract.safeTransferFrom(from, to, assets[i].tokenId, assets[i].amount, "");
             }
         }
     }
@@ -124,11 +134,27 @@ contract BarterPlace {
                 IERC721 erc721Contract = IERC721(assets[i].contractAddress);
                 require(
                     erc721Contract.ownerOf(assets[i].tokenId) == owner,
-                    'Not an owner of NFT'
+                    'Not an owner of ERC721'
                 );
                 require(
                     erc721Contract.isApprovedForAll(owner, address(this)),
-                    'Missing approval for NFT'
+                    'Missing approval for ERC721'
+                );
+            } else if (assets[i].assetType == BarterAssetType.ERC20) {
+                IERC20 erc20Contract = IERC20(assets[i].contractAddress);
+                require(
+                    erc20Contract.allowance(owner, address(this)) >= assets[i].amount,
+                    'Not enough allowance for ERC20'
+                );
+            } else if (assets[i].assetType == BarterAssetType.ERC1155) {
+                IERC1155 erc1155Contract = IERC1155(assets[i].contractAddress);
+                require(
+                    erc1155Contract.balanceOf(owner, assets[i].tokenId) >= assets[i].amount,
+                    'Insufficient ERC1155 balance'
+                );
+                require(
+                    erc1155Contract.isApprovedForAll(owner, address(this)),
+                    'Missing approval for ECR1155'
                 );
             }
         }
