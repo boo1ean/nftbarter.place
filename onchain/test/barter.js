@@ -247,6 +247,102 @@ describe("Bartering", () => {
 			expect(await erc1155Contract.balanceOf(side0.address, asset.tokenId)).to.be.eq(amount)
 		}
 	})
+	
+/*
+	it('Verify valid offer', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const amount = 3
+		const side0Assets = await mintNFT1155(erc1155Contract, side0.address, 1, amount)
+		const side1Assets = await mintNFT1155(erc1155Contract, side1.address, 2, amount)
+		await approveNFTS1155(side0, barterContract.address, erc1155Contract)
+		await approveNFTS1155(side1, barterContract.address, erc1155Contract)
+
+		const results = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets
+		)).wait()
+		const offerId = results.events[0].args.offerId
+		const isValid = await barterContract.validateOffer(offerId)
+		expect(isValid).to.be.true
+	})
+	
+	it('Verify invalid offer side0 approval', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const amount = 3
+		const side0Assets = await mintNFT1155(erc1155Contract, side0.address, 1, amount)
+		const side1Assets = await mintNFT1155(erc1155Contract, side1.address, 2, amount)
+		// await approveNFTS1155(side0, barterContract.address, erc1155Contract)
+		await approveNFTS1155(side1, barterContract.address, erc1155Contract)
+
+		const results = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets
+		)).wait()
+		const offerId = results.events[0].args.offerId
+		try {
+			const isValid = await barterContract.validateOffer(offerId)
+			expect(false).to.be.true
+		} catch (e) {
+			expect(e).to.be.ok
+		}
+	})
+	
+	it('Verify invalid offer side1 approval', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const amount = 3
+		const side0Assets = await mintNFT1155(erc1155Contract, side0.address, 1, amount)
+		const side1Assets = await mintNFT1155(erc1155Contract, side1.address, 2, amount)
+		await approveNFTS1155(side0, barterContract.address, erc1155Contract)
+		//await approveNFTS1155(side1, barterContract.address, erc1155Contract)
+
+		const results = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets
+		)).wait()
+		const offerId = results.events[0].args.offerId
+		try {
+			const isValid = await barterContract.validateOffer(offerId)
+			expect(false).to.be.true
+		} catch (e) {
+			expect(e).to.be.ok
+		}
+	})
+	
+	it('Verify invalid offer erc20 balance', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const amount = 10000
+		const side1Assets = [await mintERC20(erc201Contract, side1.address, amount)]
+		await approveERC20(erc201Contract, side1, barterContract, amount - 10)
+
+		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
+		await approveNFTS(side0, barterContract.address, NFT1Contract)
+
+		const results = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets
+		)).wait()
+
+		const offerId = results.events[0].args.offerId
+		try {
+			const isValid = await barterContract.validateOffer(offerId)
+			expect(false).to.be.true
+		} catch (e) {
+			expect(e).to.be.ok
+		}
+	})
+*/
 
 	async function mintNFT (contract, to, count) {
     	const results = []

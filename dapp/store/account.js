@@ -1,5 +1,6 @@
 import Moralis from '../utils/moralis'
 
+Moralis.enableWeb3()
 const user = Moralis.User.current()
 
 const initialState = {
@@ -36,7 +37,7 @@ export const actions = {
     let user = Moralis.User.current()
     if (!user) {
       try {
-        user = await Moralis.authenticate({ signingMessage: 'Log in using Moralis' })
+        user = await Moralis.authenticate()
         commit('setUser', user)
       } catch (e) {
         console.error('Unable to fetch user')
@@ -46,7 +47,8 @@ export const actions = {
     }
   },
   async fetchAccountNFTS ({ state, commit }) {
-    const options = { chain: 'bsc', address: state.user.get('ethAddress') }
+    console.log(Moralis)
+    const options = { address: state.user.get('ethAddress') }
     commit('setLoadingStatus', true)
     const nfts = await Moralis.Web3API.account.getNFTs(options)
     commit('setNfts', nfts.result.map(assignUniqueId))

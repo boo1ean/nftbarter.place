@@ -53,7 +53,7 @@ v-card
             fixed-header
             v-model="selectedItems"
             :headers="nftHeaders"
-            :items="items"
+            :items="filteredItems"
             :items-per-page="100"
             item-key="uniqueId"
             show-select)
@@ -121,7 +121,15 @@ export default {
       },
       set (value) {
         this.customAddress = value
+      },
+    },
+    filteredItems () {
+      if (this.dialogFilterQuery) {
+        return this.items.filter((item) => {
+          return Object.values(item).join('').toLowerCase().includes(this.dialogFilterQuery)
+        })
       }
+      return this.items
     }
   },
   watch: {
@@ -137,7 +145,7 @@ export default {
         return
       }
       if (!this.items.length) {
-        const options = { chain: 'bsc', address: this.dynamicAddress }
+        const options = { address: this.dynamicAddress }
         this.isLoading = true
         const nfts = await Moralis.Web3API.account.getNFTs(options)
         this.items = nfts.result.map(assignUniqueId)

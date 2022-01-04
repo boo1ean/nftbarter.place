@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC1155.sol";
@@ -63,10 +62,6 @@ contract BarterPlace is Ownable {
     // Barter between side0 and side1 addresses
     // side0 - msg.sender
     // side1 - specified in call
-    // Only side0 assets are validated while creating an offer
-    // validation process will occur on acceptOffer call
-    // Assets arrays must be sorted on client side so they keep exact order of elements
-    // for ERC721 order by contractAddress, tokenId desc
     function createOffer (
         address side1,
         BarterAsset[] calldata side0Assets,
@@ -102,8 +97,10 @@ contract BarterPlace is Ownable {
         require(offer.side1 == msg.sender, 'Sender is not offer participant');
         require(offer.status == OfferStatus.Pending, 'Offer status is not pending (canceled or fulfilled)');
         
+/*
         _verifyOwnership(offer.side0, offer.side0Assets);
         _verifyOwnership(offer.side1, offer.side1Assets);
+*/
         
         _transferAssets(offer.side0, offer.side1, offer.side0Assets);
         _transferAssets(offer.side1, offer.side0, offer.side1Assets);
@@ -145,7 +142,8 @@ contract BarterPlace is Ownable {
         return offers;
     }
     
-    function _verifyOwnership (address owner, BarterAsset[] storage assets) internal {
+/*
+    function _verifyOwnership (address owner, BarterAsset[] storage assets) view internal {
         for (uint256 i = 0; i < assets.length; ++i) {
             if (assets[i].assetType == BarterAssetType.ERC721) {
                 IERC721 erc721Contract = IERC721(assets[i].contractAddress);
@@ -176,8 +174,15 @@ contract BarterPlace is Ownable {
             }
         }
     }
+*/
+/*
 
     function validateOffer (uint256 offerId) public view returns (bool) {
-
+        BarterOffer storage offer = offersById[offerId];
+        require(offer.status == OfferStatus.Pending, 'Offer status is not pending (canceled or fulfilled)');
+        _verifyOwnership(offer.side0, offer.side0Assets);
+        _verifyOwnership(offer.side1, offer.side1Assets);
+        return true;
     }
+*/
 }
