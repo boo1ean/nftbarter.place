@@ -1,12 +1,16 @@
 import Moralis from '../utils/moralis'
+import getBarterContract from '../utils/barterContract'
 
 Moralis.enableWeb3()
 const user = Moralis.User.current()
 
+const DEFAULT_CHAIN = 'bsc'
 const initialState = {
+  chain: DEFAULT_CHAIN,
   user,
   nfts: [],
-  isLoading: false
+  isLoading: false,
+  offers: [],
 }
 
 export const state = () => ({ ...initialState })
@@ -20,6 +24,9 @@ export const mutations = {
   },
   setLoadingStatus (state, status) {
     state.isLoading = status
+  },
+  setOffers (state, offers) {
+    state.offers = [].concat(offers)
   }
 }
 
@@ -28,8 +35,18 @@ export const getters = {
     if (state.user == null) {
       return null
     }
-    return state.user.get('ethAddress')
-  }
+    return state.user.get('ethAddress').toLowerCase()
+  },
+  incomingOffers (state, getters) {
+    const address = getters.address
+    return state.offers.filter(o => +o.status === 0 && o.side0.toLowerCase() === address)
+  },
+  outgoingOffers (state, getters) {
+    const address = getters.address
+    const offers = state.offers.filter(o => +o.status === 0 && o.side1.toLowerCase() === address)
+    console.log(address, state.offers, offers)
+    return offers
+  },
 }
 
 export const actions = {
@@ -46,6 +63,7 @@ export const actions = {
       commit('setUser', user)
     }
   },
+
   async fetchAccountNFTS ({ state, commit }) {
     console.log(Moralis)
     const options = { address: state.user.get('ethAddress') }
@@ -53,6 +71,14 @@ export const actions = {
     const nfts = await Moralis.Web3API.account.getNFTs(options)
     commit('setNfts', nfts.result.map(assignUniqueId))
     commit('setLoadingStatus', false)
+  },
+
+  // async fetchAccountOffers ({ state, commit }) {
+  async fetchAccountOffers ({ commit }) {
+    const address = this.getters['account/address']
+    const barterContract = await getBarterContract()
+    const offers = await barterContract.methods.getOffers().call({ from: address })
+    commit('setOffers', offers)
   }
 }
 

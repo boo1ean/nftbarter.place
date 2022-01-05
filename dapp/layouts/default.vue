@@ -22,13 +22,22 @@ v-app
           v-list-item-action
             v-icon mdi-repeat
           v-list-item-content
-            v-list-item-title Barter
+            v-list-item-title Create Barter Offer
+        v-list-item(to="/offers" router exact)
+          v-list-item-action
+            v-icon mdi-tag
+          v-list-item-content
+            v-list-item-title
+              span My Offers
+              div.offers-label(v-if="outgoingOffers.length") Outgoing: {{ outgoingOffers.length }}
+              div.offers-label(v-if="incomingOffers.length") Incoming: {{ incomingOffers.length }}
   v-main
     nuxt
 </template>
 
 <script>
 import { mapState, mapActions, mapGetters } from 'vuex'
+import Moralis from '@/utils/moralis'
 export default {
   name: 'LayoutDefault',
   data () {
@@ -41,9 +50,27 @@ export default {
       return address.slice(0, 6) + '...'
     }
   },
+  mounted () {
+    this.$store.dispatch('account/fetchAccountOffers')
+    Moralis.onAccountsChanged((accounts) => {
+      confirm('Link this address to your account?')
+      // if (confirmed) {
+      //   await Moralis.link(accounts[0])
+      // }
+    })
+    Moralis.onConnect(() => {
+      console.log('ON CONNECT')
+    })
+    Moralis.onDisconnect(() => {
+      console.log('ON DISCONNECT')
+    })
+    Moralis.onChainChanged(() => {
+      console.log('ON CHAIN CHANGED')
+    })
+  },
   computed: {
     ...mapState(['notifications', 'account']),
-    ...mapGetters('account', ['address']),
+    ...mapGetters('account', ['address', 'incomingOffers', 'outgoingOffers']),
     isNotificationVisible: {
       get () {
         return this.notifications.isNotificationVisible
@@ -63,5 +90,8 @@ export default {
 <style scoped>
 .nav-wrapper {
   height: 100%;
+}
+.offers-label {
+  font-size: 0.8rem;
 }
 </style>
