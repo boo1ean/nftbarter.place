@@ -15,8 +15,8 @@ v-card(elevation=2)
         h2(v-else) You will get
         OfferSideDigest(:address="offer.side1" :assets="offer.side1Assets")
   v-card-actions
-    v-btn(v-if="isIncoming" color="primary") Accept
-    v-btn(v-else color="primary") Cancel
+    v-btn(v-if="isIncoming" @click="accept" color="primary") Accept
+    v-btn(v-else @click="cancel" color="error") Cancel
 </template>
 
 <script>
@@ -24,6 +24,7 @@ import { mapGetters } from 'vuex'
 import ContractLink from './ContractLink'
 import NFTLink from './NFTLink'
 import OfferSideDigest from '@/components/OfferSideDigest'
+import getBarterContract from '@/utils/barterContract'
 
 export default {
   name: 'OfferDigest',
@@ -36,7 +37,18 @@ export default {
   computed: {
     ...mapGetters('account', ['address']),
     isIncoming () {
-      return this.offer.side1 === this.address
+      return this.offer.side1.toLowerCase() === this.address.toLowerCase()
+    },
+  },
+  methods: {
+    async cancel () {
+      const contract = await getBarterContract()
+      await contract.methods.cancelOffer(this.offer.id).send({
+        from: this.address,
+      })
+    },
+    accept () {
+      console.log('accept')
     },
   },
 }

@@ -1,16 +1,34 @@
+import _ from 'lodash'
 import Moralis from '../utils/moralis'
 import getBarterContract from '../utils/barterContract'
 
-Moralis.enableWeb3()
-const user = Moralis.User.current()
-
 const DEFAULT_CHAIN = 'bsc'
+const networks = [
+  {
+    name: 'BSC',
+    chainId: 56,
+    explorer: 'https://bscscan.com',
+  },
+  {
+    name: 'Avalanche',
+    chainId: 43114,
+    explorer: 'https://snowtrace.io',
+  },
+  {
+    name: 'Polygon',
+    chainId: 137,
+    explorer: 'https://polygonscan.com',
+  },
+]
+
 const initialState = {
   chain: DEFAULT_CHAIN,
-  user,
+  user: null,
   nfts: [],
   isLoading: false,
   offers: [],
+  networks,
+  network: null,
 }
 
 export const state = () => ({ ...initialState })
@@ -27,7 +45,10 @@ export const mutations = {
   },
   setOffers (state, offers) {
     state.offers = [].concat(offers)
-  }
+  },
+  setNetwork (state, network) {
+    state.network = network
+  },
 }
 
 export const getters = {
@@ -39,13 +60,11 @@ export const getters = {
   },
   incomingOffers (state, getters) {
     const address = getters.address
-    return state.offers.filter(o => +o.status === 0 && o.side0.toLowerCase() === address)
+    return state.offers.filter(o => +o.status === 0 && o.side1.toLowerCase() === address)
   },
   outgoingOffers (state, getters) {
     const address = getters.address
-    const offers = state.offers.filter(o => +o.status === 0 && o.side1.toLowerCase() === address)
-    console.log(address, state.offers, offers)
-    return offers
+    return state.offers.filter(o => +o.status === 0 && o.side0.toLowerCase() === address)
   },
 }
 
@@ -63,7 +82,6 @@ export const actions = {
       commit('setUser', user)
     }
   },
-
   async fetchAccountNFTS ({ state, commit }) {
     const options = { address: state.user.get('ethAddress') }
     commit('setLoadingStatus', true)
@@ -71,13 +89,34 @@ export const actions = {
     commit('setNfts', nfts.result.map(assignUniqueId))
     commit('setLoadingStatus', false)
   },
-
-  // async fetchAccountOffers ({ state, commit }) {
   async fetchAccountOffers ({ commit }) {
-    const address = this.getters['account/address']
     const barterContract = await getBarterContract()
-    const offers = await barterContract.methods.getOffers().call({ from: address })
-    commit('setOffers', offers)
+    try {
+      const offers = await barterContract.methods.getOffers().call({ from: this.getters['account/address'] })
+      commit('setOffers', offers)
+    } catch (e) {
+      console.error('Offers fetch error', e)
+    }
+  },
+  setNetwork ({ commit }, network) {
+    commit('setNetwork', network)
+  },
+  setNetworkByChainId ({ commit }, chainId) {
+    // TODO check for id
+    const network = _.find(networks, { chainId })
+    commit('setNetwork', network)
+  },
+  async sync ({ commit, dispatch }) {
+    await Moralis.enableWeb3()
+    const chainId = await Moralis.getChainId()
+    console.log(chainId)
+    dispatch('setNetworkByChainId', chainId)
+
+    const currentUser = Moralis.User.current()
+    if (currentUser) {
+      commit('setUser', currentUser)
+      dispatch('fetchAccountOffers')
+    }
   }
 }
 

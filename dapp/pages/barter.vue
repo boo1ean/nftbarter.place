@@ -80,9 +80,6 @@ export default {
       return this.account.nfts
     },
   },
-  mounted () {
-    this.fetchAccountNFTS()
-  },
   methods: {
     ...mapActions('account', ['fetchAccountNFTS']),
     addOfferNFTs () {

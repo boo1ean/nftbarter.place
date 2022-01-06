@@ -13,6 +13,21 @@ v-app
     v-toolbar-title(class="ml-0 pl-4")
       v-app-bar-nav-icon(@click.stop="drawer = !drawer")
     v-spacer
+    v-btn(icon @click="refresh")
+      v-icon mdi-refresh
+    .network.mx-2
+      v-select(
+        dense
+        :items="account.networks"
+        label="Network"
+        solo
+        hide-details
+        item-text="name"
+        item-value="chainId"
+        return-object
+        v-model="network"
+        :loading="isNetworkLoading"
+      )
     v-btn(v-if="!account.user" text @click.stop="login()") Connect wallet
     v-btn(v-else text) {{ address | addressShort }}
   v-navigation-drawer(v-model="drawer" app clipped)
@@ -23,14 +38,28 @@ v-app
             v-icon mdi-repeat
           v-list-item-content
             v-list-item-title Create Barter Offer
-        v-list-item(to="/offers" router exact)
+        v-list-item(to="/offers/incoming" router exact)
           v-list-item-action
-            v-icon mdi-tag
+            v-icon mdi-undo
           v-list-item-content
             v-list-item-title
-              span My Offers
-              div.offers-label(v-if="outgoingOffers.length") Outgoing: {{ outgoingOffers.length }}
-              div.offers-label(v-if="incomingOffers.length") Incoming: {{ incomingOffers.length }}
+              span Incoming Offers
+              v-badge(
+                v-if="incomingOffers.length"
+                color="green"
+                :content="incomingOffers.length"
+              ).ml-3
+        v-list-item(to="/offers/Outgoing" router exact)
+          v-list-item-action
+            v-icon mdi-redo
+          v-list-item-content
+            v-list-item-title
+              span Outgoing Offers
+              v-badge(
+                v-if="outgoingOffers.length"
+                color="green"
+                :content="outgoingOffers.length"
+              ).ml-3
   v-main
     nuxt
 </template>
@@ -42,7 +71,9 @@ export default {
   name: 'LayoutDefault',
   data () {
     return {
-      drawer: true
+      drawer: true,
+      selectedNetwork: null,
+      isNetworkLoading: true,
     }
   },
   filters: {
@@ -50,8 +81,23 @@ export default {
       return address.slice(0, 6) + '...'
     }
   },
+  watch: {
+    'account.network' () {
+      this.selectedNetwork = this.account.network
+      this.isNetworkLoading = false
+    }
+  },
+  // watch: {
+  //   selectedNetwork (oldVal, newVal) {
+  //     console.log('Watching you boi', oldVal.chainId, newVal.chainId)
+  //     if (oldVal.chainId !== newVal.chainId) {
+  //       this.selectedNetwork = { chainId: 56 }
+  //     }
+  //   }
+  // },
   mounted () {
-    this.$store.dispatch('account/fetchAccountOffers')
+    this.$store.dispatch('account/sync')
+
     Moralis.onAccountsChanged((accounts) => {
       confirm('Link this address to your account?')
       // if (confirmed) {
@@ -59,18 +105,35 @@ export default {
       // }
     })
     Moralis.onConnect(() => {
-      console.log('ON CONNECT')
+      this.$store.dispatch('account/sync')
     })
     Moralis.onDisconnect(() => {
-      console.log('ON DISCONNECT')
+      console.log('disconnect')
     })
     Moralis.onChainChanged(() => {
-      console.log('ON CHAIN CHANGED')
+      this.$store.dispatch('account/sync')
     })
   },
   computed: {
     ...mapState(['notifications', 'account']),
     ...mapGetters('account', ['address', 'incomingOffers', 'outgoingOffers']),
+    network: {
+      get () {
+        return this.selectedNetwork
+      },
+      async set (val) {
+        try {
+          this.isNetworkLoading = true
+          await Moralis.switchNetwork('0x' + val.chainId.toString(16))
+          this.isNetworkLoading = false
+          this.selectedNetwork = val
+          this.$store.dispatch('account/setNetwork', val)
+        } catch (e) {
+          this.isNetworkLoading = false
+          this.selectedNetwork = { ...this.account.network }
+        }
+      },
+    },
     isNotificationVisible: {
       get () {
         return this.notifications.isNotificationVisible
@@ -82,7 +145,10 @@ export default {
   },
   methods: {
     ...mapActions('notifications', ['setVisibility']),
-    ...mapActions('account', ['login'])
+    ...mapActions('account', ['login']),
+    refresh () {
+      this.$store.dispatch('account/fetchAccountOffers')
+    },
   }
 }
 </script>
@@ -91,7 +157,7 @@ export default {
 .nav-wrapper {
   height: 100%;
 }
-.offers-label {
-  font-size: 0.8rem;
+.network {
+  width: 200px
 }
 </style>
