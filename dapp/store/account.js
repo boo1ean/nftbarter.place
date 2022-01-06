@@ -65,7 +65,6 @@ export const actions = {
   },
 
   async fetchAccountNFTS ({ state, commit }) {
-    console.log(Moralis)
     const options = { address: state.user.get('ethAddress') }
     commit('setLoadingStatus', true)
     const nfts = await Moralis.Web3API.account.getNFTs(options)

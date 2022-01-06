@@ -1,13 +1,13 @@
 <template lang="pug">
 v-container(fluid)
   v-row
-    v-col(cols="6")
+    v-col(sm=12 lg=6)
       BarterSide(
         label="Your offer"
         :address="address"
         @confirm="confirmSide0"
       )
-    v-col(cols="6")
+    v-col(sm=12 lg=6)
       BarterSide(
         label="Your expectations"
         @confirm="confirmSide1"
@@ -93,6 +93,7 @@ export default {
     async continueBarter () {
       const web3 = await Moralis.enableWeb3()
       const barterContract = new web3.eth.Contract(contractsConfig.BarterPlace.abi, contractsConfig.BarterPlace.address)
+      console.log(barterContract)
 
       // amount: "1"
       // block_number: "13679394"
@@ -111,14 +112,16 @@ export default {
       // token_uri: "https://api.beasties.online/potions/14510"
       // uniqueId: "0xb57644942016068738f4af4801fc4a7e2df9a7eb
 
-      const side0Assets = getAssetsForOffer(this.side0.selectedItems)
-      const side1Assets = getAssetsForOffer(this.side1.selectedItems)
+      const side0Assets = getAssetsForOffer(this.side0)
+      const side1Assets = getAssetsForOffer(this.side1)
+
+      console.log('side0', side0Assets, '\n\nside1', side1Assets)
 
       const result = await barterContract.methods
         .createOffer(this.side1.address, side0Assets, side1Assets)
         .send({ from: this.address })
 
-      console.log(result.events.OfferCreated)
+      console.log('Offer created', result.events.OfferCreated)
       // {blockHash: '0xbe56c7494e439326903c61aaaa6a0faa7324f0c48bdd2686eebe9f05b0c544e7', blockNumber: 14096672, contractAddress: null, cumulativeGasUsed: 12260185, from: '0x59fdb74bd93974f8e30007494accd7d227e855c0', …}
       // blockHash: "0xbe56c7494e439326903c61aaaa6a0faa7324f0c48bdd2686eebe9f05b0c544e7"
       // blockNumber: 14096672
@@ -148,57 +151,57 @@ export default {
       // transactionHash: "0x1bcfbe85c02427693b9912c21b8df6e5dfe7422f171135bfd471d3e44515950c"
       // transactionIndex: 102
       // type: "0x0"
-      result
-        .on('receipt', (receipt) => {
-          // receipt example
-          console.log('receipt', receipt)
-        // > {
-        //     "transactionHash": "0x9fc76417374aa880d4449a1f7f31ec597f00b1f6f3dd2d66f4c9c6c445836d8b",
-        //       "transactionIndex": 0,
-        //       "blockHash": "0xef95f2f1ed3ca60b048b4bf67cde2195961e0bba6f70bcbea9a2c4e133e34b46",
-        //       "blockNumber": 3,
-        //       "contractAddress": "0x11f4d0A3c12e86B4b5F39B213F7E19D048276DAe",
-        //       "cumulativeGasUsed": 314159,
-        //       "gasUsed": 30234,
-        //       "events": {
-        //       "MyEvent": {
-        //         returnValues: {
-        //           myIndexedParam: 20,
-        //             myOtherIndexedParam: '0x123456789...',
-        //             myNonIndexParam: 'My String'
-        //         },
-        //         raw: {
-        //           data: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
-        //             topics: ['0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7', '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385']
-        //         },
-        //         event: 'MyEvent',
-        //           signature: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
-        //           logIndex: 0,
-        //           transactionIndex: 0,
-        //           transactionHash: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
-        //           blockHash: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
-        //           blockNumber: 1234,
-        //           address: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe'
-        //       },
-        //       "MyOtherEvent": {
-        //       ...
-        //       },
-        //       "MyMultipleEvent":[{...}, {...}] // If there are multiple of the same event, they will be in an array
-        //     }
-        //   }
-        })
-        .on('error', (error, receipt) => {
-          console.log('error', error, receipt)
-        })
+      // result
+      //   .on('receipt', (receipt) => {
+      //     // receipt example
+      //     console.log('receipt', receipt)
+      // > {
+      //     "transactionHash": "0x9fc76417374aa880d4449a1f7f31ec597f00b1f6f3dd2d66f4c9c6c445836d8b",
+      //       "transactionIndex": 0,
+      //       "blockHash": "0xef95f2f1ed3ca60b048b4bf67cde2195961e0bba6f70bcbea9a2c4e133e34b46",
+      //       "blockNumber": 3,
+      //       "contractAddress": "0x11f4d0A3c12e86B4b5F39B213F7E19D048276DAe",
+      //       "cumulativeGasUsed": 314159,
+      //       "gasUsed": 30234,
+      //       "events": {
+      //       "MyEvent": {
+      //         returnValues: {
+      //           myIndexedParam: 20,
+      //             myOtherIndexedParam: '0x123456789...',
+      //             myNonIndexParam: 'My String'
+      //         },
+      //         raw: {
+      //           data: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+      //             topics: ['0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7', '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385']
+      //         },
+      //         event: 'MyEvent',
+      //           signature: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+      //           logIndex: 0,
+      //           transactionIndex: 0,
+      //           transactionHash: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+      //           blockHash: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+      //           blockNumber: 1234,
+      //           address: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe'
+      //       },
+      //       "MyOtherEvent": {
+      //       ...
+      //       },
+      //       "MyMultipleEvent":[{...}, {...}] // If there are multiple of the same event, they will be in an array
+      //     }
+      //   }
+      // })
+      // .on('error', (error, receipt) => {
+      //   console.log('error', error, receipt)
+      // })
 
-      console.log(barterContract.methods)
-      console.log(result)
-
+      // console.log(barterContract.methods)
+      // console.log(result)
+      //
       // TODO get approvals
 
-      function getAssetsForOffer (items) {
+      function getAssetsForOffer (sideAssets) {
         const assets = []
-        for (const asset of items) {
+        for (const asset of sideAssets.selectedItems) {
           const assetType = getAssetType(asset)
           const amount = getAssetAmount(asset)
 
@@ -209,6 +212,16 @@ export default {
             amount,
           })
         }
+
+        for (const erc20Asset of sideAssets.erc20Assets) {
+          assets.push({
+            contractAddress: erc20Asset.contractAddress,
+            tokenId: 0,
+            assetType: 1,
+            amount: getERC20Amount(erc20Asset),
+          })
+        }
+
         return assets
       }
 
@@ -218,6 +231,14 @@ export default {
 
       function getAssetAmount () {
         return 0
+      }
+
+      function getERC20Amount (erc20) {
+        return toBN(erc20.amount).mul(toBN(10).pow(toBN(erc20.decimals))).toString()
+      }
+
+      function toBN (val) {
+        return web3.utils.toBN(val)
       }
     },
     confirmSide0 (side0) {

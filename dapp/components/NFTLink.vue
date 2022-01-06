@@ -10,7 +10,10 @@ export default {
   props: ['contract', 'tokenId'],
   filters: {
     shortId (address) {
-      return address.slice(0, 7)
+      if (address.length > 7) {
+        return address.slice(0, 7) + '..'
+      }
+      return address
     }
   },
 }
