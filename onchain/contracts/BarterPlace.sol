@@ -137,8 +137,7 @@ contract BarterPlace is Ownable {
         uint256[] memory offersIds = offersByAddress[msg.sender];
         BarterOffer[] memory offers = new BarterOffer[](offersIds.length);
         for (uint256 i = 0; i < offersIds.length; ++i) {
-//            offers[i] = offersById[offersIds[i]];
-            offers[i] = offersById[i];
+            offers[i] = offersById[offersIds[i]];
         }
         return offers;
     }

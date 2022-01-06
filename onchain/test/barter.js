@@ -41,10 +41,11 @@ describe("Bartering", () => {
 		signers = await ethers.getSigners()
 		owner = signers[0]
 	})
-	
+
 	it('Get Multiple offers', async () => {
 		let side0 = signers[0]
 		let side1 = signers[1]
+		let side2 = signers[2]
 
 		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
 		const side1Assets = await mintNFT(NFT1Contract, side1.address, 2)
@@ -55,7 +56,16 @@ describe("Bartering", () => {
 			side0Assets,
 			side1Assets
 		)).wait()
-        
+
+		const side0Assets3 = await mintNFT(NFT1Contract, side0.address, 4)
+		const side2Assets = await mintNFT(NFT1Contract, side2.address, 6)
+
+		await (await barterContract.createOffer(
+			side2.address,
+			side0Assets3,
+			side2Assets,
+		)).wait()
+
 		const side0Assets2 = side0Assets.slice(0, -1)
 		const side1Assets2 = side1Assets.slice(0, -1)
 		await (await barterContract.createOffer(
@@ -63,12 +73,30 @@ describe("Bartering", () => {
 			side0Assets2,
 			side1Assets2
 		)).wait()
-        
+
 		const side0Offers = await barterContract.connect(side0).getOffers()
-		expect(side0Offers.length).to.be.equal(2)
-        
+		expect(side0Offers.length).to.be.equal(3)
+		expect(side0Offers[0].side0Assets.length).to.be.eq(2)
+		expect(side0Offers[1].side0Assets.length).to.be.eq(4)
+		expect(side0Offers[2].side0Assets.length).to.be.eq(1)
+		expect(side0Offers[0].side1Assets.length).to.be.eq(2)
+		expect(side0Offers[1].side1Assets.length).to.be.eq(6)
+		expect(side0Offers[2].side1Assets.length).to.be.eq(1)
+
 		const side1Offers = await barterContract.connect(side1).getOffers()
 		expect(side1Offers.length).to.be.equal(2)
+		expect(side1Offers[0].side0Assets.length).to.be.eq(2)
+		expect(side1Offers[1].side0Assets.length).to.be.eq(1)
+		expect(side1Offers[0].side1Assets.length).to.be.eq(2)
+		expect(side1Offers[1].side1Assets.length).to.be.eq(1)
+
+		const side2Offers = await barterContract.connect(side2).getOffers()
+		expect(side2Offers.length).to.be.equal(1)
+		expect(side2Offers[0].side0Assets.length).to.be.eq(4)
+		expect(side2Offers[0].side1Assets.length).to.be.eq(6)
+		for (const asset in side2Offers[0].side0Assets) {
+			expect(side2Offers[0].side0Assets[asset].tokenId).to.be.eq(side0Assets3[asset].tokenId)
+		}
 	})
 
 	it("Create barter offer", async () => {
@@ -84,8 +112,6 @@ describe("Bartering", () => {
 			side0Assets,
 			side1Assets
 		)).wait()
-		console.log(result)
-		return
 
         expect(result.events.length).to.be.equal(1)
 
