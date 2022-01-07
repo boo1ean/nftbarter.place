@@ -213,7 +213,7 @@ export default {
       }
       if (!this.items.length) {
         const options = {
-          chain: this.$store.state.account.chain,
+          chain: this.$store.state.account.network.chain,
           address: this.dynamicAddress,
         }
         this.isLoading = true

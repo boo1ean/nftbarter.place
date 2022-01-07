@@ -112,9 +112,9 @@ export default {
     // Moralis.onDisconnect(() => {
     //   console.log('disconnect')
     // })
-    // Moralis.onChainChanged(() => {
-    //   this.$store.dispatch('account/sync')
-    // })
+    Moralis.onChainChanged(() => {
+      this.$store.dispatch('account/sync')
+    })
   },
   computed: {
     ...mapState(['notifications', 'account']),

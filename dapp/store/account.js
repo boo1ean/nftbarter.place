@@ -8,16 +8,19 @@ const networks = [
     name: 'BSC',
     chainId: 56,
     explorerURL: 'https://bscscan.com',
+    chain: 'bsc',
   },
   {
     name: 'Avalanche',
     chainId: 43114,
     explorerURL: 'https://snowtrace.io',
+    chain: 'avalanche',
   },
   {
     name: 'Polygon',
     chainId: 137,
     explorerURL: 'https://polygonscan.com',
+    chain: 'polygon',
   },
 ]
 
