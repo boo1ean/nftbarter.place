@@ -200,7 +200,6 @@ export default {
   watch: {
     customAddress () {
       this.items = []
-      this.selectedItems = []
     },
     selectedItems () {
       this.confirmed = false
