@@ -74,7 +74,9 @@ describe("Bartering", () => {
 			side1Assets2
 		)).wait()
 
-		const side0Offers = await barterContract.connect(side0).getOffers()
+		
+		const offersIdsSide0 = await barterContract.getOffersIdsByAddress(side0.address)
+		const side0Offers = await barterContract.connect(side0).getOffersByIds(offersIdsSide0)
 		expect(side0Offers.length).to.be.equal(3)
 		expect(side0Offers[0].side0Assets.length).to.be.eq(2)
 		expect(side0Offers[1].side0Assets.length).to.be.eq(4)
@@ -83,14 +85,16 @@ describe("Bartering", () => {
 		expect(side0Offers[1].side1Assets.length).to.be.eq(6)
 		expect(side0Offers[2].side1Assets.length).to.be.eq(1)
 
-		const side1Offers = await barterContract.connect(side1).getOffers()
+		const offersIdsSide1 = await barterContract.getOffersIdsByAddress(side1.address)
+		const side1Offers = await barterContract.connect(side1).getOffersByIds(offersIdsSide1)
 		expect(side1Offers.length).to.be.equal(2)
 		expect(side1Offers[0].side0Assets.length).to.be.eq(2)
 		expect(side1Offers[1].side0Assets.length).to.be.eq(1)
 		expect(side1Offers[0].side1Assets.length).to.be.eq(2)
 		expect(side1Offers[1].side1Assets.length).to.be.eq(1)
 
-		const side2Offers = await barterContract.connect(side2).getOffers()
+		const offersIdsSide2 = await barterContract.getOffersIdsByAddress(side2.address)
+		const side2Offers = await barterContract.connect(side2).getOffersByIds(offersIdsSide2)
 		expect(side2Offers.length).to.be.equal(1)
 		expect(side2Offers[0].side0Assets.length).to.be.eq(4)
 		expect(side2Offers[0].side1Assets.length).to.be.eq(6)
@@ -120,11 +124,11 @@ describe("Bartering", () => {
 		expect(event.args.side0).to.be.equal(side0.address)
 		expect(event.args.side1).to.be.equal(side1.address)
 
-		const side0Offers = await barterContract.connect(side0).getOffers()
+		const side0Offers = await barterContract.connect(side0).getOffersByAddress(side0.address)
 		expect(side0Offers.length).to.be.equal(1)
 		const side0Offer = side0Offers[0]
 
-		const side1Offers = await barterContract.connect(side1).getOffers()
+		const side1Offers = await barterContract.connect(side1).getOffersByAddress(side1.address)
 		expect(side1Offers.length).to.be.equal(1)
 		const side1Offer = side0Offers[0]
 

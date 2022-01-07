@@ -133,8 +133,11 @@ contract BarterPlace is Ownable {
         }
     }
     
-    function getOffers () public view returns (BarterOffer[] memory) {
-        uint256[] memory offersIds = offersByAddress[msg.sender];
+    function getOffersIdsByAddress (address targetAddress) public view returns (uint256[] memory) {
+        return offersByAddress[targetAddress];
+    }
+    
+    function getOffersByIds (uint256[] memory offersIds) public view returns (BarterOffer[] memory) {
         BarterOffer[] memory offers = new BarterOffer[](offersIds.length);
         for (uint256 i = 0; i < offersIds.length; ++i) {
             offers[i] = offersById[offersIds[i]];
@@ -142,6 +145,13 @@ contract BarterPlace is Ownable {
         return offers;
     }
     
+    function getOffersByAddress (address targetAddress) public view returns (BarterOffer[] memory) {
+        return getOffersByIds(getOffersIdsByAddress(targetAddress));
+    }
+    
+    function getRecentOfferId () public view returns (uint256) {
+        return _offerIdCounter.current() - 1;
+    }
 /*
     function _verifyOwnership (address owner, BarterAsset[] storage assets) view internal {
         for (uint256 i = 0; i < assets.length; ++i) {
