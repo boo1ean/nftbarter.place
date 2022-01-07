@@ -13,10 +13,15 @@ v-app
     v-toolbar-title(class="ml-0 pl-4")
       v-app-bar-nav-icon(@click.stop="drawer = !drawer")
     v-spacer
-    v-btn(icon @click="refresh")
+    v-btn(
+      icon
+      @click="refresh"
+      v-if="address"
+    )
       v-icon mdi-refresh
     .network.mx-2
       v-select(
+        v-if="address"
         dense
         :items="account.networks"
         label="Network"
@@ -28,7 +33,7 @@ v-app
         v-model="network"
         :loading="isNetworkLoading"
       )
-    v-btn(v-if="!account.user" text @click.stop="login()") Connect wallet
+    v-btn(v-if="!account.address" text @click.stop="connectWallet") Connect wallet
     v-btn(v-else text) {{ address | addressShort }}
   v-navigation-drawer(v-model="drawer" app clipped)
     div.d-flex.flex-column.justify-space-between.nav-wrapper
@@ -79,13 +84,13 @@ export default {
   filters: {
     addressShort (address) {
       return address.slice(0, 6) + '...'
-    }
+    },
   },
   watch: {
     'account.network' () {
       this.selectedNetwork = this.account.network
       this.isNetworkLoading = false
-    }
+    },
   },
   // watch: {
   //   selectedNetwork (oldVal, newVal) {
@@ -98,21 +103,18 @@ export default {
   mounted () {
     this.$store.dispatch('account/sync')
 
-    Moralis.onAccountsChanged((accounts) => {
-      confirm('Link this address to your account?')
-      // if (confirmed) {
-      //   await Moralis.link(accounts[0])
-      // }
+    Moralis.onAccountsChanged(async (accounts) => {
+      await this.$store.dispatch('account/sync')
     })
-    Moralis.onConnect(() => {
-      this.$store.dispatch('account/sync')
-    })
-    Moralis.onDisconnect(() => {
-      console.log('disconnect')
-    })
-    Moralis.onChainChanged(() => {
-      this.$store.dispatch('account/sync')
-    })
+    // Moralis.onConnect(() => {
+    //   this.$store.dispatch('account/sync')
+    // })
+    // Moralis.onDisconnect(() => {
+    //   console.log('disconnect')
+    // })
+    // Moralis.onChainChanged(() => {
+    //   this.$store.dispatch('account/sync')
+    // })
   },
   computed: {
     ...mapState(['notifications', 'account']),
@@ -140,8 +142,8 @@ export default {
       },
       set (val) {
         this.setVisibility(val)
-      }
-    }
+      },
+    },
   },
   methods: {
     ...mapActions('notifications', ['setVisibility']),
@@ -149,7 +151,10 @@ export default {
     refresh () {
       this.$store.dispatch('account/fetchAccountOffers')
     },
-  }
+    connectWallet () {
+      this.$store.dispatch('account/login')
+    },
+  },
 }
 </script>
 

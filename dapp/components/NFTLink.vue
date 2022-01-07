@@ -1,20 +1,24 @@
 <template lang="pug">
   a(
-    _target="blank"
-    href="http://example.com"
-  ) {{ tokenId | shortId }}
+    target="_blank"
+    :title="tokenId"
+    :href="url"
+  ) {{ shortId }}
 </template>
 <script>
 export default {
   name: 'NFTLink',
   props: ['contract', 'tokenId'],
-  filters: {
-    shortId (address) {
-      if (address.length > 7) {
-        return address.slice(0, 7) + '..'
+  computed: {
+    url () {
+      return this.$store.state.account.network.explorerURL + `/token/${this.contract}?a=${this.tokenId}`
+    },
+    shortId () {
+      if (this.tokenId.length > 7) {
+        return this.tokenId.slice(0, 7) + '..'
       }
-      return address
-    }
+      return this.tokenId
+    },
   },
 }
 </script>

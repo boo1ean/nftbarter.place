@@ -7,36 +7,33 @@ const networks = [
   {
     name: 'BSC',
     chainId: 56,
-    explorer: 'https://bscscan.com',
+    explorerURL: 'https://bscscan.com',
   },
   {
     name: 'Avalanche',
     chainId: 43114,
-    explorer: 'https://snowtrace.io',
+    explorerURL: 'https://snowtrace.io',
   },
   {
     name: 'Polygon',
     chainId: 137,
-    explorer: 'https://polygonscan.com',
+    explorerURL: 'https://polygonscan.com',
   },
 ]
 
 const initialState = {
   chain: DEFAULT_CHAIN,
-  user: null,
-  nfts: [],
   isLoading: false,
+  nfts: [],
   offers: [],
   networks,
   network: null,
+  address: null,
 }
 
 export const state = () => ({ ...initialState })
 
 export const mutations = {
-  setUser (state, user) {
-    state.user = user
-  },
   setNfts (state, nfts) {
     state.nfts = nfts
   },
@@ -49,14 +46,16 @@ export const mutations = {
   setNetwork (state, network) {
     state.network = network
   },
+  setupAccount (state, { address, chainId }) {
+    console.log('account.mutations.setAccount', { address, chainId })
+    state.address = address
+    state.network = _.find(networks, { chainId })
+  },
 }
 
 export const getters = {
   address (state) {
-    if (state.user == null) {
-      return null
-    }
-    return state.user.get('ethAddress').toLowerCase()
+    return state.address
   },
   incomingOffers (state, getters) {
     const address = getters.address
@@ -70,20 +69,18 @@ export const getters = {
 
 export const actions = {
   async login ({ commit }) {
-    let user = Moralis.User.current()
-    if (!user) {
-      try {
-        user = await Moralis.authenticate()
-        commit('setUser', user)
-      } catch (e) {
-        console.error('Unable to fetch user')
-      }
-    } else {
-      commit('setUser', user)
+    console.log('account.actions.login')
+    try {
+      const web3 = await Moralis.enableWeb3()
+      const address = web3.eth.currentProvider.selectedAddress
+      const chainId = await Moralis.getChainId()
+      commit('setupAccount', { address, chainId })
+    } catch (e) {
+      console.error('accounts.actions.login', e)
     }
   },
   async fetchAccountNFTS ({ state, commit }) {
-    const options = { address: state.user.get('ethAddress') }
+    const options = { address: state.address }
     commit('setLoadingStatus', true)
     const nfts = await Moralis.Web3API.account.getNFTs(options)
     commit('setNfts', nfts.result.map(assignUniqueId))
@@ -107,17 +104,15 @@ export const actions = {
     commit('setNetwork', network)
   },
   async sync ({ commit, dispatch }) {
-    await Moralis.enableWeb3()
-    const chainId = await Moralis.getChainId()
-    console.log(chainId)
-    dispatch('setNetworkByChainId', chainId)
-
-    const currentUser = Moralis.User.current()
-    if (currentUser) {
-      commit('setUser', currentUser)
+    const isConnected = _.get(window, 'web3.currentProvider.selectedAddress', false)
+    if (isConnected) {
+      const web3 = await Moralis.enableWeb3()
+      const address = web3.eth.currentProvider.selectedAddress
+      const chainId = await Moralis.getChainId()
+      commit('setupAccount', { address, chainId })
       dispatch('fetchAccountOffers')
     }
-  }
+  },
 }
 
 function assignUniqueId (nft) {

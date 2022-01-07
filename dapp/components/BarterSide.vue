@@ -27,12 +27,7 @@ v-card
       template(v-slot:top)
         h3 NFTs
       template(v-slot:item.token_id="{ item }")
-        a(
-          target="_blank"
-          v-if="item.token_uri"
-          :href="item.token_uri"
-        ) {{ item.token_id | tokenIdShort }}
-        span(v-else) {{ item.token_id | tokenIdShort }}
+        NFTLink(:contract="item.token_address" :token-id="item.token_id")
       template(v-slot:item.metadata="{ item }")
         NFTMetadata(:data="item.metadata")
     v-data-table(
@@ -63,7 +58,6 @@ v-card
           text
           color="red"
           x-small) Remove
-
   v-card-actions
     v-dialog(v-model="dialog" max-width=920)
       template(v-slot:activator="{ on, attrs }")
@@ -92,6 +86,7 @@ v-card
             :items="filteredItems"
             :items-per-page="100"
             item-key="uniqueId"
+            hide-default-footer
             show-select)
             template(v-slot:top)
               v-text-field(
@@ -103,12 +98,7 @@ v-card
                 hide-details
               ).mb-2
             template(v-slot:item.token_id="{ item }")
-              a(
-                target="_blank"
-                v-if="item.token_uri"
-                :href="item.token_uri"
-              ) {{ item.token_id | tokenIdShort }}
-              span(v-else) {{ item.token_id | tokenIdShort }}
+              NFTLink(:contract="item.token_address" :token-id="item.token_id")
             template(v-slot:item.metadata="{ item }")
               NFTMetadata(:data="item.metadata")
         v-card-actions
@@ -175,7 +165,7 @@ export default {
         { text: 'Token', value: 'token_id' },
         { text: 'Type', value: 'contract_type' },
         { text: 'Collection', value: 'name' },
-        { text: 'Metadata', value: 'metadata' }
+        { text: 'Metadata', value: 'metadata' },
       ],
       erc20Headers: [
         { text: 'Name', value: 'symbol' },
@@ -225,7 +215,7 @@ export default {
       if (!this.items.length) {
         const options = {
           chain: this.$store.state.account.chain,
-          address: this.dynamicAddress
+          address: this.dynamicAddress,
         }
         this.isLoading = true
         const nfts = await Moralis.Web3API.account.getNFTs(options)
@@ -257,7 +247,7 @@ export default {
     removeERC20Asset ({ contractAddress }) {
       _.remove(this.erc20Assets, { contractAddress })
       this.erc20Assets = [...this.erc20Assets]
-    }
+    },
   },
 }
 
