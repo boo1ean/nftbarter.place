@@ -85,7 +85,7 @@ export default {
       console.log('Already have address')
       this.isLoading = true
       const options = {
-        chain: this.$store.state.account.chain,
+        chain: this.$store.state.account.network.chain,
         address: this.address,
       }
       this.tokenBalances = await Moralis.Web3API.account.getTokenBalances(options)
