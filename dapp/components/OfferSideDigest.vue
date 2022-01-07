@@ -2,60 +2,53 @@
 v-container(fluid)
   .loader(v-if="isLoading")
     h4 Loading...
-  v-row(v-if="nftAssets.length")
-    v-col
-      h4 NFTS
-      v-simple-table(dense)
-        template(v-slot:default)
-          thead
-            tr
-              th Token
-              th Metadata
-              th Ownership
-              th Approval
-          tbody
-            tr(v-for="item in nftAssets")
-              td
-                NFTLink(:contract="item.token_address", :token-id="item.token_id")
-              td
-                NFTMetadata(:data="item.metadata")
-              td
-                v-alert(v-if="!item.ownershipIssue" dense text type="success").my-1 Valid
-                v-alert(v-else dense text type="error").my-1
-                  span Invalid
-              td
-                v-alert(v-if="!item.approvalIssue" dense text type="success").my-1 Valid
-                v-alert(v-else dense text type="error").my-1
-                  span Missing
-  v-row(v-if="erc20Assets.length")
-    v-col
-      h4 ERC20 Tokens
-      v-simple-table(dense)
-        template(v-slot:default)
-          thead
-            tr
-              th Symbol
-              th Contract
-              th Amount
-              th Balance
-              th Allowance
-          tbody
-            tr(v-for="item in erc20Assets")
-              td
-                ContractLink(:address="item.symbol")
-              td
-                ContractLink(:address="item.address")
-              td
-                TokenBalance(:balance="item.amount" :decimals="item.decimals")
-              td
-                v-alert(v-if="!item.balanceIssue" dense text type="success" ).my-1 Valid
-                v-alert(v-else dense text type="error" ).my-1
-                  span Insufficient:&nbsp;
-                  TokenBalance(:balance="item.balanceIssue" :decimals="item.decimals")
-              td
-                v-alert(v-if="!item.allowanceIssue" dense text type="success" ).my-1 Valid
-                v-alert(v-else dense text type="error" ).my-1
-                  span Insufficient
+  v-data-table(
+    :headers="nftHeaders"
+    :items="nftAssets"
+    hide-default-footer
+    dense
+    disable-filtering
+    disable-sort
+  )
+    template(v-slot:top)
+      h3 NFTs
+    template(v-slot:item.token_address="{ item }")
+      NFTLink(:contract="item.token_address", :token-id="item.token_id")
+    template(v-slot:item.metadata="{ item }")
+      NFTMetadata(:data="item.metadata")
+    template(v-slot:item.ownershipIssue="{ item }")
+      v-alert(v-if="!item.ownershipIssue" dense text type="success").my-1 Valid
+      v-alert(v-else dense text type="error").my-1
+        span Invalid
+    template(v-slot:item.approvalIssue="{ item }")
+      v-alert(v-if="!item.approvalIssue" dense text type="success").my-1 Valid
+      v-alert(v-else dense text type="error").my-1
+        span Missing
+  v-data-table(
+    :headers="erc20Headers"
+    :items="erc20Assets"
+    hide-default-footer
+    dense
+    disable-filtering
+    disable-sort
+  )
+    template(v-slot:top)
+      h3 ERC20 Tokens
+    template(v-slot:item.symbol="{ item }")
+      ContractLink(:address="item.symbol")
+    template(v-slot:item.address="{ item }")
+      ContractLink(:address="item.address")
+    template(v-slot:item.amount="{ item }")
+      TokenBalance(:balance="item.amount" :decimals="item.decimals")
+    template(v-slot:item.balanceIssue="{ item }")
+      v-alert(v-if="!item.balanceIssue" dense text type="success" ).my-1 Valid
+      v-alert(v-else dense text type="error" ).my-1
+        span Insufficient:&nbsp;
+        TokenBalance(:balance="item.balanceIssue" :decimals="item.decimals")
+    template(v-slot:item.allowanceIssue="{ item }")
+      v-alert(v-if="!item.allowanceIssue" dense text type="success" ).my-1 Valid
+      v-alert(v-else dense text type="error" ).my-1
+        span Insufficient
 
 </template>
 <script>
@@ -77,6 +70,19 @@ export default {
       isLoading: true,
       nftAssets: [],
       erc20Assets: [],
+      nftHeaders: [
+        { text: 'Token', value: 'token_address' },
+        { text: 'Metadata', value: 'metadata' },
+        { text: 'Ownership', value: 'ownershipIssue' },
+        { text: 'Approval', value: 'approvalIssue' },
+      ],
+      erc20Headers: [
+        { text: 'Symbol', value: 'symbol' },
+        { text: 'Contract', value: 'address' },
+        { text: 'Amount', value: 'amount' },
+        { text: 'Balance', value: 'balanceIssue' },
+        { text: 'Allowance', value: 'allowanceIssue' },
+      ],
     }
   },
   async mounted () {
