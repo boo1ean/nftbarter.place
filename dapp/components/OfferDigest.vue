@@ -6,11 +6,11 @@ v-card(elevation=2)
     span(v-else) to {{ offer.side1 }}
   v-card-text
     v-row
-      v-col(cols="6")
+      v-col(lg="6" sm="12")
         h2(v-if="isIncoming") You will get
         h2(v-else) You will give
         OfferSideDigest(:address="offer.side0" :assets="offer.side0Assets")
-      v-col(cols="6")
+      v-col(lg="6" sm="12")
         h2(v-if="isIncoming") You will give
         h2(v-else) You will get
         OfferSideDigest(:address="offer.side1" :assets="offer.side1Assets")

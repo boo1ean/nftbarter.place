@@ -59,69 +59,75 @@ v-card
           color="red"
           x-small) Remove
   v-card-actions
-    v-dialog(v-model="dialog" max-width=920)
-      template(v-slot:activator="{ on, attrs }")
+    v-row
+      v-col(lg=2 sm=6)
+        v-dialog(v-model="dialog" max-width=920)
+          template(v-slot:activator="{ on, attrs }")
+            v-btn(
+              color="primary"
+              v-bind="attrs"
+              block
+              v-on="on"
+              @click="openDialog()") Add NFT
+          v-card(v-if="!dynamicAddress")
+            v-card-title.d-flex.justify-center.align-center.mb-1
+              | Enter participant address before adding
+          v-card(v-else-if="isLoading")
+            v-card-title.d-flex.justify-center.align-center.mb-1
+              v-progress-circular(
+                width=6
+                color="deep-purple accent-4"
+                indeterminate).ma-4
+          v-card(v-else)
+            v-card-title.text-h5 Select items
+            v-card-text
+              v-data-table(
+                height="600"
+                fixed-header
+                v-model="selectedItems"
+                :headers="nftHeaders"
+                :items="filteredItems"
+                :items-per-page="100"
+                item-key="uniqueId"
+                hide-default-footer
+                show-select)
+                template(v-slot:top)
+                  v-text-field(
+                    v-model="dialogFilterQuery"
+                    append-icon="mdi-magnify"
+                    label="Filter by id, name, attributes, etc.."
+                    filled
+                    single-line
+                    hide-details
+                  ).mb-2
+                template(v-slot:item.token_id="{ item }")
+                  NFTLink(:contract="item.token_address" :token-id="item.token_id")
+                template(v-slot:item.metadata="{ item }")
+                  NFTMetadata(:data="item.metadata")
+            v-card-actions
+              v-spacer
+              v-btn(text @click="dialog = false") Cancel
+              v-btn(color="primary" @click="dialog = false") Add
+      v-col(lg=2 sm=6).pl-0
+        v-dialog(v-model="dialogERC20" max-width=920)
+          template(v-slot:activator="{ on, attrs }")
+            v-btn(
+              block
+              color="primary"
+              v-bind="attrs"
+              v-on="on") Add ERC20
+          AddERC20(
+            :address="dynamicAddress"
+            @cancel="dialogERC20 = false"
+            @save="addERC20"
+          )
+      v-col(offset-lg=5 lg=3 sm=12).d-flex.justify-end
+        v-icon(v-if="confirmed" color="green").mr-2 mdi-check-circle
         v-btn(
-          color="primary"
-          v-bind="attrs"
-          v-on="on"
-          @click="openDialog()") Add NFT
-      v-card(v-if="!dynamicAddress")
-        v-card-title.d-flex.justify-center.align-center.mb-1
-          | Enter participant address before adding
-      v-card(v-else-if="isLoading")
-        v-card-title.d-flex.justify-center.align-center.mb-1
-          v-progress-circular(
-            width=6
-            color="deep-purple accent-4"
-            indeterminate).ma-4
-      v-card(v-else)
-        v-card-title.text-h5 Select items
-        v-card-text
-          v-data-table(
-            height="600"
-            fixed-header
-            v-model="selectedItems"
-            :headers="nftHeaders"
-            :items="filteredItems"
-            :items-per-page="100"
-            item-key="uniqueId"
-            hide-default-footer
-            show-select)
-            template(v-slot:top)
-              v-text-field(
-                v-model="dialogFilterQuery"
-                append-icon="mdi-magnify"
-                label="Filter by id, name, attributes, etc.."
-                filled
-                single-line
-                hide-details
-              ).mb-2
-            template(v-slot:item.token_id="{ item }")
-              NFTLink(:contract="item.token_address" :token-id="item.token_id")
-            template(v-slot:item.metadata="{ item }")
-              NFTMetadata(:data="item.metadata")
-        v-card-actions
-          v-spacer
-          v-btn(text @click="dialog = false") Cancel
-          v-btn(color="primary" @click="dialog = false") Add
-    v-dialog(v-model="dialogERC20" max-width=920)
-      template(v-slot:activator="{ on, attrs }")
-        v-btn(
-          color="primary"
-          v-bind="attrs"
-          v-on="on").ml-2 Add ERC20
-      AddERC20(
-        :address="dynamicAddress"
-        @cancel="dialogERC20 = false"
-        @save="addERC20"
-      )
-    v-spacer
-    v-icon(v-if="confirmed" color="green").mr-2 mdi-check-circle
-    v-btn(
-      color="success"
-      :disabled="confirmed || !dynamicAddress"
-      @click="confirm") {{ confirmed ? 'Confirmed' : selectedItems.length ? 'Confirm items' : 'Confirm without items' }}
+          color="success"
+          block
+          :disabled="confirmed || !dynamicAddress"
+          @click="confirm") {{ confirmed ? 'Confirmed' : selectedItems.length ? 'Confirm items' : 'Confirm without items' }}
 </template>
 <script>
 import _ from 'lodash'
