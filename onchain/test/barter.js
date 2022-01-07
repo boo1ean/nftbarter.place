@@ -41,6 +41,45 @@ describe("Bartering", () => {
 		signers = await ethers.getSigners()
 		owner = signers[0]
 	})
+	
+	it('Get recent offer id', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
+		const side1Assets = await mintNFT(NFT1Contract, side1.address, 2)
+		await approveNFTS(owner, barterContract.address, NFT1Contract)
+        
+		await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets
+		)).wait()
+        
+		const recentOfferId0 = await barterContract.getRecentOfferId()
+		expect(recentOfferId0).to.be.eq(0)
+        
+		await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets
+		)).wait()
+		const recentOfferId1 = await barterContract.getRecentOfferId()
+		expect(recentOfferId1).to.be.eq(1)
+
+		await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets
+		)).wait()
+		const recentOfferId2 = await barterContract.getRecentOfferId()
+		expect(recentOfferId2).to.be.eq(2)
+        
+		const offerIdsSide0 = await barterContract.getOffersIdsByAddress(side0.address)
+		expect(offerIdsSide0.length).to.be.eq(3)
+		const offerIdsSide1 = await barterContract.getOffersIdsByAddress(side1.address)
+		expect(offerIdsSide1.length).to.be.eq(3)
+	})
 
 	it('Get Multiple offers', async () => {
 		let side0 = signers[0]
@@ -157,6 +196,48 @@ describe("Bartering", () => {
 
 		for (const asset of side0Assets) {
 			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side1.address)
+		}
+		for (const asset of side1Assets) {
+			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side0.address)
+		}
+	})
+
+	it('Accept Empty Sides', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
+		const side1Assets = await mintNFT(NFT1Contract, side1.address, 2)
+		await approveNFTS(side0, barterContract.address, NFT1Contract)
+		await approveNFTS(side1, barterContract.address, NFT1Contract)
+
+		const results = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			[]
+		)).wait()
+
+		const offerId = results.events[0].args.offerId
+		await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+
+		for (const asset of side0Assets) {
+			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side1.address)
+		}
+		for (const asset of side1Assets) {
+			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side1.address)
+		}
+		
+		const results2 = await (await barterContract.createOffer(
+			side1.address,
+			[],
+			side0Assets.concat(side1Assets)
+		)).wait()
+
+		const offerId2 = results2.events[0].args.offerId
+		await (await barterContract.connect(side1).acceptOffer(offerId2)).wait()
+
+		for (const asset of side0Assets) {
+			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side0.address)
 		}
 		for (const asset of side1Assets) {
 			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side0.address)
