@@ -2,7 +2,6 @@ import _ from 'lodash'
 import Moralis from '../utils/moralis'
 import getBarterContract from '../utils/barterContract'
 
-const DEFAULT_CHAIN = 'bsc'
 const networks = [
   {
     name: 'BSC',
@@ -25,7 +24,6 @@ const networks = [
 ]
 
 const initialState = {
-  chain: DEFAULT_CHAIN,
   isLoading: false,
   nfts: [],
   offers: [],

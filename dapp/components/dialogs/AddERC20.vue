@@ -112,7 +112,7 @@ export default {
   watch: {
     address () {
       console.log('Address changed!')
-    }
+    },
   },
   computed: {
     filteredItems () {
@@ -144,7 +144,7 @@ export default {
 
       if (this.customTokenAddress && this.customTokenAmount) {
         const options = {
-          chain: this.$store.state.account.chain,
+          chain: this.$store.state.account.network.chain,
           addresses: this.customTokenAddress,
         }
         const [token] = await Moralis.Web3API.token.getTokenMetadata(options)
@@ -160,7 +160,7 @@ export default {
       this.customTokenAddress = ''
       this.customTokenAmount = ''
       this.amounts = {}
-    }
+    },
   },
 }
 </script>
