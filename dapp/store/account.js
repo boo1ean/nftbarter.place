@@ -8,20 +8,53 @@ const networks = [
     chainId: 56,
     explorerURL: 'https://bscscan.com',
     chain: 'bsc',
+    details: {
+      chainId: 56,
+      chainName: 'Binance Smart Chain',
+      currencyName: 'BNB',
+      currencySymbol: 'BNB',
+      rpcUrl: 'https://bsc-dataseed1.ninicoin.io',
+      blockExplorerUrl: 'https://bscscan.com/',
+    },
   },
   {
     name: 'Avalanche',
     chainId: 43114,
     explorerURL: 'https://snowtrace.io',
     chain: 'avalanche',
+    details: {
+      chainId: 43114,
+      chainName: 'Avalanche',
+      currencyName: 'AVAX',
+      currencySymbol: 'AVAX',
+      rpcUrl: 'https://api.avax.network/ext/bc/C/rpc',
+      blockExplorerUrl: 'https://cchain.explorer.avax.network/',
+    },
   },
   {
     name: 'Polygon',
     chainId: 137,
     explorerURL: 'https://polygonscan.com',
     chain: 'polygon',
+    details: {
+      chainId: 137,
+      chainName: 'Polygon',
+      currencyName: 'MATIC',
+      currencySymbol: 'MATIC',
+      rpcUrl: 'https://polygon-rpc.com',
+      blockExplorerUrl: 'https://polygonscan.com/',
+    },
   },
 ]
+
+// await Moralis.addNetwork(
+//     chainId,
+//     chainName,
+//     currencyName,
+//     currencySymbol,
+//     rpcUrl,
+//     blockExplorerUrl
+// );
 
 const initialState = {
   isLoading: false,
@@ -113,6 +146,16 @@ export const actions = {
       commit('setupAccount', { address, chainId })
       dispatch('fetchAccountOffers')
     }
+  },
+  async ensureChain ({ commit }, chain) {
+    const network = _.find(networks, { chain })
+    if (!network) {
+      return
+    }
+    try {
+      await Moralis.switchNetwork('0x' + network.chainId.toString(16))
+      commit('setNetwork', network)
+    } catch (e) {}
   },
 }
 

@@ -1,15 +1,19 @@
 <template lang="pug">
-v-container(fluid)
-  h1.mb-4 Incoming Offers
-  OfferDigest(v-for="o in incomingOffers" :offer="o").mb-4
+  v-container(fluid)
+    h1.mb-4 Incoming offers
+    v-row(v-if="incomingOffers.length")
+      v-col(lg="6" sm="12")
+        OfferListItem(v-for="o in incomingOffers" :offer="o").mb-3
+    v-row(v-else)
+      v-col(lg="6" sm="12") No incoming offers
 </template>
 <script>
 import { mapState, mapGetters } from 'vuex'
-import OfferDigest from '@/components/OfferDigest'
+import OfferListItem from '@/components/OfferListItem'
 export default {
   name: 'IncomingOffers',
   components: {
-    OfferDigest,
+    OfferListItem,
   },
   computed: {
     ...mapState('account', ['offers']),
