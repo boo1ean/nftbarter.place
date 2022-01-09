@@ -51,6 +51,7 @@ v-card(elevation=1)
           hide-details
           solo
           v-model="item.amount"
+          @input="makeDirty"
         )
       template(v-slot:item.action="{ item }")
         v-btn(
@@ -79,7 +80,7 @@ v-card(elevation=1)
             v-card-title.text-h5 Select items
             v-card-text
               v-data-table(
-                height="600"
+                height="400"
                 fixed-header
                 v-model="selectedItems"
                 :headers="nftHeaders"
@@ -124,7 +125,7 @@ v-card(elevation=1)
           color="success"
           block
           :disabled="confirmed || !dynamicAddress"
-          @click="confirm") {{ confirmed ? 'Confirmed' : selectedItems.length ? 'Confirm items' : 'Confirm without items' }}
+          @click="confirm") {{ confirmed ? 'Confirmed' : hasItems ? 'Confirm assets' : 'Confirm without assets' }}
 </template>
 <script>
 import _ from 'lodash'
@@ -201,13 +202,16 @@ export default {
       }
       return this.items
     },
+    hasItems () {
+      return this.selectedItems.length || this.erc20Assets.length
+    },
   },
   watch: {
     customAddress () {
       this.items = []
     },
     selectedItems () {
-      this.confirmed = false
+      this.makeDirty()
     },
   },
   methods: {
@@ -216,17 +220,14 @@ export default {
         this.dialog = false
         return
       }
-      if (!this.items.length) {
-        const options = {
-          chain: this.$store.state.account.network.chain,
-          address: this.dynamicAddress,
-        }
-        console.log('Fetching nft', options)
-        this.isLoading = true
-        const nfts = await Moralis.Web3API.account.getNFTs(options)
-        this.items = nfts.result.map(assignUniqueId)
-        this.isLoading = false
+      const options = {
+        chain: this.$store.state.account.network.chain,
+        address: this.dynamicAddress,
       }
+      this.isLoading = true
+      const nfts = await Moralis.Web3API.account.getNFTs(options)
+      this.items = nfts.result.map(assignUniqueId)
+      this.isLoading = false
     },
     confirm () {
       this.$emit('confirm', {
@@ -241,17 +242,22 @@ export default {
       for (const asset of erc20Assets) {
         const existingAsset = _.find(this.erc20Assets, { contractAddress: asset.contractAddress })
         if (existingAsset) {
-          existingAsset.amount += asset.amount
+          existingAsset.amount = asset.amount
         } else {
           this.erc20Assets.push(asset)
         }
       }
       this.erc20Assets = [...this.erc20Assets]
-      this.confirmed = false
+      this.makeDirty()
     },
     removeERC20Asset ({ contractAddress }) {
       _.remove(this.erc20Assets, { contractAddress })
       this.erc20Assets = [...this.erc20Assets]
+      this.makeDirty()
+    },
+    makeDirty () {
+      this.confirmed = false
+      this.$emit('dirty')
     },
   },
 }

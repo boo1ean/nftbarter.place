@@ -1,22 +1,24 @@
 <template lang="pug">
-v-container(fluid)
+div
   v-row
     v-col(lg="6" sm="12")
       v-card(
-        :color="isIncoming ? 'white lighten-5' : 'amber lighten-5'"
+        :color="isSide0 ? 'amber lighten-5' : 'white'"
         elevation=1
       )
-        v-card-title
-          | {{ isIncoming ? 'NOT YOUR SIDE' : 'YOUR SIDE' }}
+        v-card-title {{ isSide0 ? 'YOUR SIDE' : 'NOT YOUR SIDE' }}
+        v-card-subtitle
+          ContractLink(:address="offer.side0" full="true")
         v-card-text
           OfferDigestSide(:address="offer.side0" :assets="offer.side0Assets").digest-container
     v-col(lg="6" sm="12")
       v-card(
-        :color="!isIncoming ? 'white lighten-5' : 'amber lighten-5'"
+        :color="isSide1 ? 'amber lighten-5' : 'white'"
         elevation=1
       )
-        v-card-title
-          | {{ !isIncoming ? 'NOT YOUR SIDE' : 'YOUR SIDE' }}
+        v-card-title {{ isSide1 ? 'YOUR SIDE' : 'NOT YOUR SIDE' }}
+        v-card-subtitle
+          ContractLink(:address="offer.side1" full="true")
         v-card-text
           OfferDigestSide(:address="offer.side1" :assets="offer.side1Assets").digest-container
   v-row
@@ -40,7 +42,10 @@ export default {
   },
   computed: {
     ...mapGetters('account', ['address']),
-    isIncoming () {
+    isSide0 () {
+      return this.offer.side0.toLowerCase() === this.address.toLowerCase()
+    },
+    isSide1 () {
       return this.offer.side1.toLowerCase() === this.address.toLowerCase()
     },
   },

@@ -41,14 +41,14 @@ v-card(v-else)
               hide-details
               v-model="amounts[item.token_address]"
             )
-    v-card(elevation=2).mt-4
-      v-card-title Missing token? Add custom in form below
-      v-card-text
-        v-row
-          v-col(cols=6)
-            v-text-field(label="ERC20 Contract Address" v-model="customTokenAddress")
-          v-col(cols=6)
-            v-text-field(type="number" label="Amount" v-model="customTokenAmount")
+    //v-card(elevation=2).mt-4
+    //  v-card-title Missing token? Add custom in form below
+    //  v-card-text
+    //    v-row
+    //      v-col(cols=6)
+    //        v-text-field(label="ERC20 Contract Address" v-model="customTokenAddress")
+    //      v-col(cols=6)
+    //        v-text-field(type="number" label="Amount" v-model="customTokenAmount")
   v-card-actions
     v-spacer
     v-btn(text @click="cancel") Cancel

@@ -147,7 +147,8 @@ export const actions = {
   async fetchAccountOffers ({ commit }) {
     const barterContract = await contracts.createBarterContract()
     try {
-      const offers = await barterContract.methods.getOffers().call({ from: this.getters['account/address'] })
+      const address = this.getters['account/address']
+      const offers = await barterContract.methods.getOffersByAddress(address).call({ from: address })
       commit('setOffers', offers)
     } catch (e) {
       console.error('Offers fetch error', e)

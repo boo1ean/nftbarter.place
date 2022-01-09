@@ -8,11 +8,13 @@ v-container(fluid)
         label="Your offer"
         :address="address"
         @confirm="confirmSide0"
+        @dirty="makeSide0Dirty"
       )
     v-col(sm=12 lg=6)
       BarterSide(
         label="Your expectations"
         @confirm="confirmSide1"
+        @dirty="makeSide1Dirty"
       )
   .actions-container
     v-card
@@ -118,6 +120,7 @@ export default {
           this.offerState = OfferState.Preview
           break
         }
+        case (OfferState.Approvals):
         case (OfferState.Preview): {
           this.offerState = OfferState.Approvals
           const barterContractAddress = await contracts.addresses().barter
@@ -142,7 +145,7 @@ export default {
                 case AssetType.erc20: {
                   const contract = await contracts.createERC20(asset.contractAddress)
                   const allowance = await contract.methods.allowance(this.pendingOffer.side0, barterContractAddress).call({ from: this.pendingOffer.side0 })
-                  if (toBN(allowance).cmp(toBN(asset.amount)) === -1) {
+                  if (toBN(allowance).cmp(toBN(asset.amount)) === -1 || confirm('You already have allowance, need more?')) {
                     await contract.methods.approve(barterContractAddress, asset.amount).send({ from: this.pendingOffer.side0 })
                   }
                   break
@@ -163,7 +166,7 @@ export default {
           break
         }
         case (OfferState.Creating): {
-          const barterContract = contracts.createBarterContract()
+          const barterContract = await contracts.createBarterContract()
           try {
             const result = await barterContract.methods
               .createOffer(
@@ -172,8 +175,11 @@ export default {
                 this.pendingOffer.side1Assets,
               )
               .send({ from: this.pendingOffer.side0 })
-            console.log('Offer created', result.events.OfferCreated)
+            const offerId = result.events.OfferCreated.returnValues.offerId
+            this.$router.push(`/offers/${offerId}?chain=${this.account.network.chain}`)
+            this.$store.dispatch('account/sync')
           } catch (e) {
+            console.log('Offer creation error', { offer: this.pendingOffer }, e)
           }
           break
         }
@@ -221,7 +227,7 @@ export default {
         return 0
       }
       function getERC20Amount (erc20) {
-        return Moralis.Units.Token(erc20.amount, erc20.decimals)
+        return Moralis.Units.Token(erc20.amount, erc20.decimals).toString()
       }
       function toBN (val) {
         return web3Utils.utils.toBN(val)
@@ -232,6 +238,12 @@ export default {
     },
     confirmSide1 (side1) {
       this.side1 = side1
+    },
+    makeSide0Dirty () {
+      this.side0 = null
+    },
+    makeSide1Dirty () {
+      this.side1 = null
     },
   },
 }

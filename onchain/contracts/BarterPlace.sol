@@ -15,7 +15,8 @@ contract BarterPlace is Ownable {
     enum OfferStatus {
         Pending,
         Canceled,
-        Fulfilled
+        Fulfilled,
+        Rejected
     }
     
     enum BarterAssetType {

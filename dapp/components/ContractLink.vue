@@ -3,13 +3,13 @@ a(
   target="_blank"
   :title="address"
   :href="url"
-) {{ shortAddress }}
+) {{ full ? address : shortAddress }}
 </template>
 
 <script>
 export default {
   name: 'ContractLink',
-  props: ['address'],
+  props: ['address', 'full'],
   computed: {
     url () {
       return this.$store.state.account.network.explorerURL + '/address/' + this.address

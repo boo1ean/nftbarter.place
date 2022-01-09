@@ -2,8 +2,11 @@
 v-container(fluid v-if="isWalletConnected && offer")
   OfferDigest(:offer="offer")
     template(v-slot:actions)
-      v-btn(v-if="isIncoming" @click="acceptOffer" color="primary") Accept
-      v-btn(v-else @click="cancelOffer" color="error") Cancel
+      div(v-if="isOfferPending")
+        v-btn(v-if="isSide0" @click="cancelOffer" color="error").mr-3 Cancel
+        v-btn(v-if="isSide1" @click="acceptOffer" color="primary") Accept
+      div(v-else)
+        v-alert(:type="offerStatusAlertType") This offer is {{ offerStatus }}
 .d-flex.justify-center.align-center.fill-height.flex-column(v-else-if="isWalletConnected && mismatchChain")
   v-alert(type="error") To see offer you need to change network to {{ requestedChain }}
   v-btn(color="primary" @click="changeNetwork") Change network
@@ -13,7 +16,6 @@ v-container(fluid v-if="isWalletConnected && offer")
     v-alert(type="warning") Connect wallet to view offer
 </template>
 <script>
-import _ from 'lodash'
 import { mapState } from 'vuex'
 import ProgressIndicator from '@/components/ProgressIndicator'
 import contracts from '@/utils/contracts'
@@ -25,6 +27,7 @@ export default {
   data () {
     return {
       offer: null,
+      isLoading: false,
     }
   },
   mounted () {
@@ -48,11 +51,39 @@ export default {
       const currentChain = this.$store.getters['account/chain']
       return this.$route.query.chain !== currentChain
     },
-    isIncoming () {
+    isSide0 () {
+      return this.offer.side0.toLowerCase() === this.currentUserAddress.toLowerCase()
+    },
+    isSide1 () {
       return this.offer.side1.toLowerCase() === this.currentUserAddress.toLowerCase()
     },
     currentUserAddress () {
       return this.$store.getters['account/address']
+    },
+    isOfferPending () {
+      return this.offer && +this.offer.status === 0
+    },
+    offerStatus () {
+      if (!this.offer) {
+        return 'undefined'
+      }
+      const offerStatuses = [
+        'Pending',
+        'Cancelled',
+        'Completed',
+        'Rejected',
+      ]
+      return offerStatuses[this.offer.status]
+    },
+    offerStatusAlertType () {
+      switch (this.offerStatus) {
+        case 'Pending':
+          return 'warning'
+        case 'Completed':
+          return 'success'
+        default:
+          return 'error'
+      }
     },
   },
   methods: {
@@ -64,21 +95,38 @@ export default {
         return
       }
       const barterContract = await contracts.createBarterContract(this.requestedChain)
-      // TODO change for updated contract
-      const offers = await barterContract.methods.getOffers().call({ from: this.currentUserAddress })
-      this.offer = _.find(offers, { id: this.$route.params.id })
+      const [offer] = await barterContract.methods.getOffersByIds([this.$route.params.id]).call()
+      if (offer) {
+        this.offer = offer
+      }
     },
     async cancelOffer () {
       try {
+        this.isLoading = true
         const barterContract = await contracts.createBarterContract(this.requestedChain)
         await barterContract.methods.cancelOffer(this.offer.id).send({
           from: this.currentUserAddress,
         })
+        this.$store.dispatch('account/sync')
+        await this.fetchOffer()
       } catch (e) {
+        console.error('Cancel offer error', e)
       }
+      this.isLoading = false
     },
-    acceptOffer () {
-      console.log('accept')
+    async acceptOffer () {
+      try {
+        this.isLoading = true
+        const barterContract = await contracts.createBarterContract(this.requestedChain)
+        await barterContract.methods.acceptOffer(this.offer.id).send({
+          from: this.currentUserAddress,
+        })
+        this.$store.dispatch('account/sync')
+        await this.fetchOffer()
+      } catch (e) {
+        console.error('Accept offer error', e)
+      }
+      this.isLoading = false
     },
   },
 }

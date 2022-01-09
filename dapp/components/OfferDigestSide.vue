@@ -2,9 +2,9 @@
 ProgressIndicator(v-if="isLoading")
 .d-flex.align-center.justify-center(v-else-if="!nftAssets.length && !erc20Assets.length")
   v-alert(type="warning") No assets on this side
-v-container(fluid v-else)
+div(v-else)
   div(v-if="nftAssets.length")
-    h2.mb-2 NFTs
+    h2.mb-6 NFTs
     v-data-table(
       :headers="nftHeaders"
       :items="nftAssets"
@@ -26,7 +26,7 @@ v-container(fluid v-else)
         v-alert(v-else dense text type="error").my-1
           span Missing
   div(v-if="erc20Assets.length")
-    h2.mt-4.mb-2 ERC20 Tokens
+    h2.mb-2 ERC20 Tokens
     v-data-table(
       :headers="erc20Headers"
       :items="erc20Assets"
@@ -35,8 +35,6 @@ v-container(fluid v-else)
       disable-filtering
       disable-sort
     ).mt-3
-      template(v-slot:item.symbol="{ item }")
-        ContractLink(:address="item.symbol")
       template(v-slot:item.address="{ item }")
         ContractLink(:address="item.address")
       template(v-slot:item.amount="{ item }")
