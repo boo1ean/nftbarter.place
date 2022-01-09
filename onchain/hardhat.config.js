@@ -38,30 +38,33 @@ module.exports = {
 	solidity: "0.8.4",
 	defaultNetwork: "hardhat",
 	networks: {
+		hardhat: {},
 		localhost: {
 			url: "http://127.0.0.1:8545"
 		},
-		hardhat: {
-		},
-		testnet: {
-			url: "https://data-seed-prebsc-1-s1.binance.org:8545",
-			chainId: 97,
-			gasPrice: 20000000000,
-			accounts: [privateKey],
-		},
-		mainnet: {
+		bsc: {
 			url: "https://bsc-dataseed.binance.org/",
 			chainId: 56,
 			gasPrice: 20000000000,
 			accounts: [privateKey],
-		}
+		},
+		ropsten: {
+			url: "https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+			chainId: 3,
+			gasPrice: 20000000000,
+			accounts: [privateKey],
+		},
+		avax: {
+			url: "https://api.avax.network/ext/bc/C/rpc",
+			chainId: 43114,
+			gasPrice: 20000000000,
+			accounts: [privateKey],
+		},
+		matic: {
+			url: "https://polygon-rpc.com",
+			chainId: 137,
+			gasPrice: 20000000000,
+			accounts: [privateKey],
+		},
 	},
-	//solidity: {
-		//version: "0.5.16",
-		//settings: {
-			//optimizer: {
-				//enabled: true
-			//}
-		//}
-	//},
 }
