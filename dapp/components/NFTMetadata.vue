@@ -16,7 +16,8 @@ export default {
   props: ['data'],
   data () {
     return {
-      noData: true
+      noData: true,
+      isTooltipVisible: false,
     }
   },
   mounted () {
@@ -27,9 +28,8 @@ export default {
       this.attrs = parsedData.attributes
       this.noData = false
     } catch (e) {
-
     }
-  }
+  },
 }
 </script>
 <style scoped>

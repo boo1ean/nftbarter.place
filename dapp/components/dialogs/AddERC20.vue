@@ -4,10 +4,7 @@ v-card(v-if="!address")
     | Enter participant address before adding
 v-card(v-else-if="isLoading")
   v-card-title.d-flex.justify-center.align-center.mb-1
-    v-progress-circular(
-      width=6
-      color="deep-purple accent-4"
-      indeterminate).ma-4
+    ProgressIndicator.ma-4
 v-card(v-else)
   v-card-title.text-h5 Add ERC20 tokens
   v-card-text
@@ -63,6 +60,7 @@ import Moralis from '../../utils/moralis'
 import NFTMetadata from '@/components/NFTMetadata'
 import ContractLink from '@/components/ContractLink'
 import TokenBalance from '@/components/TokenBalance'
+import ProgressIndicator from '@/components/ProgressIndicator'
 
 export default {
   name: 'AddERC20',
@@ -71,6 +69,7 @@ export default {
     NFTMetadata,
     ContractLink,
     TokenBalance,
+    ProgressIndicator,
   },
   filters: {
     shortSymbol (sym) {

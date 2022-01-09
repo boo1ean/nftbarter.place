@@ -1,10 +1,21 @@
 import Moralis from 'moralis'
 
-const serverUrl = 'https://7k3fhzs3lfq7.usemoralis.com:2053/server'
-const appId = 'TYssyyTAoXqKreMt5Sv5ePmGGuMeXITDxnZrwtuF'
-// const serverUrl = 'https://lsoku5barapv.usemoralis.com:2053/server'
-// const appId = 'xbX2eFu5lJi4htooFmnDek50EfhcKXskiVyXgya6'
+const config = {
+  main: {
+    serverUrl: 'https://7k3fhzs3lfq7.usemoralis.com:2053/server',
+    appId: 'TYssyyTAoXqKreMt5Sv5ePmGGuMeXITDxnZrwtuF',
+  },
+  test: {
+    serverUrl: 'https://n1nlmbwjtoar.usemoralis.com:2053/server',
+    appId: 'ElIVyOrLds7aP98AKmbkHFX5ec0QDrb0Sk70umyT',
+  },
+  local: {
+    serverUrl: 'https://lsoku5barapv.usemoralis.com:2053/server',
+    appId: 'xbX2eFu5lJi4htooFmnDek50EfhcKXskiVyXgya6',
+  },
+}
 
-Moralis.start({ serverUrl, appId })
+Moralis.start(config.main)
 
+window.Moralis = Moralis
 export default Moralis

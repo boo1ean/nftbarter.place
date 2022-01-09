@@ -1,6 +1,8 @@
 <template lang="pug">
 v-container(fluid)
-  v-row
+  ProgressIndicator(v-if="isApprovalLoading" :big="true").mt-10.pt-10
+  OfferDigest(v-else-if="pendingOffer" :offer="pendingOffer")
+  v-row(v-else)
     v-col(sm=12 lg=6)
       BarterSide(
         label="Your offer"
@@ -12,26 +14,29 @@ v-container(fluid)
         label="Your expectations"
         @confirm="confirmSide1"
       )
-    .actions-container
-      v-card
-        v-card-title Creating barter offer
-        v-card-text
-          v-stepper(
-            elevation=0
-          )
-            v-stepper-header
-              v-stepper-step(:complete='offerState > 0' step='1') Select tokens
-              v-divider
-              v-stepper-step(:complete='offerState > 1' step='2') Approve contracts
-              v-divider
-              v-stepper-step(step='3') Create offer
-        v-card-actions
-          v-btn(
-            color="success"
-            block
-            @click="continueBarter"
-            :disabled="!side0 || !side1"
-          ) Create offer
+  .actions-container
+    v-card
+      v-card-title Creating barter offer
+      v-card-text
+        v-stepper(
+          elevation=0
+          v-model="offerState"
+        )
+          v-stepper-header
+            v-stepper-step(:complete='offerState > 0' step='0') Select Assets
+            v-divider
+            v-stepper-step(:complete='offerState > 1' step='1') Preview
+            v-divider
+            v-stepper-step(:complete='offerState > 2' step='2') Approve permissions
+            v-divider
+            v-stepper-step(step='3') Create offer
+      v-card-actions
+        v-btn(
+          color="success"
+          block
+          @click="continueBarter"
+          :disabled="!side0 || !side1"
+        ) {{ continueText }}
 </template>
 
 <style>
@@ -44,16 +49,28 @@ v-container(fluid)
 
 <script>
 import { mapState, mapActions, mapGetters } from 'vuex'
+import Moralis from 'moralis'
 import NFTMetadata from '../components/NFTMetadata'
 import BarterSide from '../components/BarterSide'
-import Moralis from '../utils/moralis'
-import contractsConfig from '../contracts-config.json'
 import contracts from '@/utils/contracts'
 
 const OfferState = {
   Initial: 0,
-  Approvals: 1,
-  Creating: 2,
+  Preview: 1,
+  Approvals: 2,
+  Creating: 3,
+}
+
+const AssetType = {
+  erc721: 0,
+  erc20: 1,
+}
+
+const ContinueTexts = {
+  [OfferState.Initial]: 'Continue',
+  [OfferState.Preview]: 'Approve permissions',
+  [OfferState.Approvals]: 'Approve permissions',
+  [OfferState.Creating]: 'Create offer',
 }
 
 export default {
@@ -72,6 +89,8 @@ export default {
       offerState: OfferState.Initial,
       side0: null,
       side1: null,
+      pendingOffer: null,
+      isApprovalLoading: false,
     }
   },
   computed: {
@@ -79,6 +98,9 @@ export default {
     ...mapGetters('account', ['address']),
     offerNfts () {
       return this.account.nfts
+    },
+    continueText () {
+      return ContinueTexts[this.offerState]
     },
   },
   methods: {
@@ -89,45 +111,84 @@ export default {
       this.dialog = false
     },
     async continueBarter () {
-      const web3 = await Moralis.enableWeb3()
-      const barterContract = new web3.eth.Contract(contractsConfig.BarterPlace.abi, contractsConfig.BarterPlace.address)
-
-      // amount: "1"
-      // block_number: "13679394"
-      // block_number_minted: "13679394"
-      // contract_type: "ERC721"
-      // frozen: 0
-      // is_valid: 1
-      // metadata: "{\"name\": \"Bella Potion\", \"image\": \"https://beasties.online/public_assets/potions/bella_babe_potion.png\", \"animation_url\": \"https://beasties.online/public_assets/potions/bella_babe_potion_min.mp4\", \"attributes\": [{\"trait_type\": \"Rarity\", \"value\": \"common\"}, {\"trait_type\": \"MA\", \"value\": 1}, {\"trait_type\": \"MD\", \"value\": 1}, {\"trait_type\": \"PA\", \"value\": 1}, {\"trait_type\": \"PD\", \"value\": 1}]}\n"
-      // name: "Magic Potions"
-      // owner_of: "0x59fdb74bd93974f8e30007494accd7d227e855c0"
-      // symbol: "MGPTNS"
-      // synced_at: "2021-12-21T21:48:33.357Z"
-      // syncing: 2
-      // token_address: "0xb57644942016068738f4af4801fc4a7e2df9a7eb"
-      // token_id: "14510"
-      // token_uri: "https://api.beasties.online/potions/14510"
-      // uniqueId: "0xb57644942016068738f4af4801fc4a7e2df9a7eb
-
-      const [side0Issues, side1Issues] = await Promise.all([
-        await validateAssets(this.side0),
-        await validateAssets(this.side1),
-      ])
-
-      console.log('side0 issues', side0Issues)
-      console.log('side1 issues', side1Issues)
-
-      const side0Assets = getAssetsForOffer(this.side0)
-      const side1Assets = getAssetsForOffer(this.side1)
-
-      console.log('side0', side0Assets, '\n\nside1', side1Assets)
-
-      try {
-        const result = await barterContract.methods
-          .createOffer(this.side1.address, side0Assets, side1Assets)
-          .send({ from: this.address })
-        console.log('Offer created', result.events.OfferCreated)
-      } catch (e) {
+      const web3Utils = new Moralis.Web3()
+      switch (this.offerState) {
+        case (OfferState.Initial): {
+          this.pendingOffer = getOffer(this)
+          this.offerState = OfferState.Preview
+          break
+        }
+        case (OfferState.Preview): {
+          this.offerState = OfferState.Approvals
+          const barterContractAddress = await contracts.addresses().barter
+          let didGetAllApprovals = true
+          const usedNftAddresses = {}
+          for (const asset of this.pendingOffer.side0Assets) {
+            this.isApprovalLoading = true
+            try {
+              switch (asset.assetType) {
+                case AssetType.erc721: {
+                  if (usedNftAddresses[asset.contractAddress]) {
+                    continue
+                  }
+                  const contract = await contracts.createERC721(asset.contractAddress)
+                  const hasApproval = await contract.methods.isApprovedForAll(this.pendingOffer.side0, barterContractAddress).call({ from: this.pendingOffer.side0 })
+                  if (!hasApproval) {
+                    await contract.methods.setApprovalForAll(barterContractAddress, true).send({ from: this.pendingOffer.side0 })
+                  }
+                  usedNftAddresses[asset.contractAddress] = true
+                  break
+                }
+                case AssetType.erc20: {
+                  const contract = await contracts.createERC20(asset.contractAddress)
+                  const allowance = await contract.methods.allowance(this.pendingOffer.side0, barterContractAddress).call({ from: this.pendingOffer.side0 })
+                  if (toBN(allowance).cmp(toBN(asset.amount)) === -1) {
+                    await contract.methods.approve(barterContractAddress, asset.amount).send({ from: this.pendingOffer.side0 })
+                  }
+                  break
+                }
+              }
+            } catch (e) {
+              console.log('Approval failed', e)
+              didGetAllApprovals = false
+            }
+            this.isApprovalLoading = false
+          }
+          if (didGetAllApprovals) {
+            this.offerState = OfferState.Creating
+          } else {
+            alert('Sorry, there are some issues with your approvals, please try again')
+          }
+          this.isApprovalLoading = false
+          break
+        }
+        case (OfferState.Creating): {
+          const barterContract = contracts.createBarterContract()
+          try {
+            const result = await barterContract.methods
+              .createOffer(
+                this.pendingOffer.side1,
+                this.pendingOffer.side0Assets,
+                this.pendingOffer.side1Assets,
+              )
+              .send({ from: this.pendingOffer.side0 })
+            console.log('Offer created', result.events.OfferCreated)
+          } catch (e) {
+          }
+          break
+        }
+      }
+      function getOffer (that) {
+        const side0 = that.address
+        const side1 = that.side1.address
+        const side0Assets = getAssetsForOffer(that.side0)
+        const side1Assets = getAssetsForOffer(that.side1)
+        return {
+          side0,
+          side1,
+          side0Assets,
+          side1Assets,
+        }
       }
       function getAssetsForOffer (sideAssets) {
         const assets = []
@@ -142,7 +203,6 @@ export default {
             amount,
           })
         }
-
         for (const erc20Asset of sideAssets.erc20Assets) {
           assets.push({
             contractAddress: erc20Asset.contractAddress,
@@ -154,67 +214,17 @@ export default {
 
         return assets
       }
-
-      async function validateAssets (side) {
-        const nftIssuesPromises = []
-        for (const asset of side.selectedItems) {
-          const contract = await contracts.createERC721(asset.token_address)
-          nftIssuesPromises.push(
-            contract.methods.ownerOf(asset.token_id)
-              .call()
-              .then((ownerAddress) => {
-                if (ownerAddress.toLowerCase() !== side.address.toLowerCase()) {
-                  return {
-                    asset,
-                    currentOwner: ownerAddress,
-                  }
-                }
-                return false
-              }),
-          )
-        }
-
-        const nftIssues = (await Promise.all(nftIssuesPromises)).filter(Boolean)
-
-        const balanceIssuesPromises = []
-        for (const erc20Asset of side.erc20Assets) {
-          const contract = await contracts.createERC20(erc20Asset.contractAddress)
-          balanceIssuesPromises.push(
-            contract.methods.balanceOf(side.address)
-              .call()
-              .then((balance) => {
-                const requiredAmount = getERC20Amount(erc20Asset)
-                if (toBN(balance).cmp(toBN(requiredAmount)) === -1) {
-                  return {
-                    symbol: erc20Asset.symbol,
-                    address: erc20Asset.contractAddress,
-                    balance,
-                    requiredAmount,
-                  }
-                }
-                return false
-              }),
-          )
-        }
-        const balanceIssues = (await Promise.all(balanceIssuesPromises)).filter(Boolean)
-
-        return nftIssues.concat(balanceIssues)
-      }
-
       function getAssetType () {
         return 0
       }
-
       function getAssetAmount () {
         return 0
       }
-
       function getERC20Amount (erc20) {
-        return toBN(erc20.amount).mul(toBN(10).pow(toBN(erc20.decimals))).toString()
+        return Moralis.Units.Token(erc20.amount, erc20.decimals)
       }
-
       function toBN (val) {
-        return web3.utils.toBN(val)
+        return web3Utils.utils.toBN(val)
       }
     },
     confirmSide0 (side0) {

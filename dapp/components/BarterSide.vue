@@ -74,10 +74,7 @@ v-card(elevation=1)
               | Enter participant address before adding
           v-card(v-else-if="isLoading")
             v-card-title.d-flex.justify-center.align-center.mb-1
-              v-progress-circular(
-                width=6
-                color="deep-purple accent-4"
-                indeterminate).ma-4
+              ProgressIndicator.ma-4
           v-card(v-else)
             v-card-title.text-h5 Select items
             v-card-text
@@ -136,6 +133,7 @@ import NFTMetadata from '@/components/NFTMetadata'
 import AddERC20 from '@/components/dialogs/AddERC20'
 import ContractLink from '@/components/ContractLink'
 import TokenBalance from '@/components/TokenBalance'
+import ProgressIndicator from '@/components/ProgressIndicator'
 
 export default {
   name: 'BarterSide',
@@ -148,6 +146,7 @@ export default {
     AddERC20,
     TokenBalance,
     ContractLink,
+    ProgressIndicator,
   },
   filters: {
     tokenIdShort (tokenId) {
@@ -222,6 +221,7 @@ export default {
           chain: this.$store.state.account.network.chain,
           address: this.dynamicAddress,
         }
+        console.log('Fetching nft', options)
         this.isLoading = true
         const nfts = await Moralis.Web3API.account.getNFTs(options)
         this.items = nfts.result.map(assignUniqueId)

@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import Moralis from '../utils/moralis'
-import getBarterContract from '../utils/barterContract'
+import contracts from '@/utils/contracts'
 
 const networks = [
   {
@@ -46,6 +46,21 @@ const networks = [
       currencySymbol: 'MATIC',
       rpcUrl: 'https://polygon-rpc.com',
       blockExplorerUrl: 'https://polygonscan.com/',
+    },
+  },
+  {
+    name: 'Ropsten Test Network',
+    chainId: 3,
+    explorerURL: 'https://ropsten.etherscan.io',
+    chain: 'ropsten',
+    color: '#ff4a8d',
+    details: {
+      chainId: 3,
+      chainName: 'Ropsten Test Network',
+      currencyName: 'ETH',
+      currencySymbol: 'ETH',
+      rpcUrl: 'https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+      blockExplorerUrl: 'https://ropsten.etherscan.io',
     },
   },
 ]
@@ -130,7 +145,7 @@ export const actions = {
     commit('setLoadingStatus', false)
   },
   async fetchAccountOffers ({ commit }) {
-    const barterContract = await getBarterContract()
+    const barterContract = await contracts.createBarterContract()
     try {
       const offers = await barterContract.methods.getOffers().call({ from: this.getters['account/address'] })
       commit('setOffers', offers)
