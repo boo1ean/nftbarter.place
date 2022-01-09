@@ -1,55 +1,53 @@
 <template lang="pug">
-v-container(fluid)
-  .loader(v-if="isLoading")
-    h4 Loading...
-  v-data-table(
-    :headers="nftHeaders"
-    :items="nftAssets"
-    hide-default-footer
-    dense
-    disable-filtering
-    disable-sort
-  )
-    template(v-slot:top)
-      h3 NFTs
-    template(v-slot:item.token_address="{ item }")
-      NFTLink(:contract="item.token_address", :token-id="item.token_id")
-    template(v-slot:item.metadata="{ item }")
-      NFTMetadata(:data="item.metadata")
-    template(v-slot:item.ownershipIssue="{ item }")
-      v-alert(v-if="!item.ownershipIssue" dense text type="success").my-1 Valid
-      v-alert(v-else dense text type="error").my-1
-        span Invalid
-    template(v-slot:item.approvalIssue="{ item }")
-      v-alert(v-if="!item.approvalIssue" dense text type="success").my-1 Valid
-      v-alert(v-else dense text type="error").my-1
-        span Missing
-  v-data-table(
-    :headers="erc20Headers"
-    :items="erc20Assets"
-    hide-default-footer
-    dense
-    disable-filtering
-    disable-sort
-  )
-    template(v-slot:top)
-      h3 ERC20 Tokens
-    template(v-slot:item.symbol="{ item }")
-      ContractLink(:address="item.symbol")
-    template(v-slot:item.address="{ item }")
-      ContractLink(:address="item.address")
-    template(v-slot:item.amount="{ item }")
-      TokenBalance(:balance="item.amount" :decimals="item.decimals")
-    template(v-slot:item.balanceIssue="{ item }")
-      v-alert(v-if="!item.balanceIssue" dense text type="success" ).my-1 Valid
-      v-alert(v-else dense text type="error" ).my-1
-        span Insufficient:&nbsp;
-        TokenBalance(:balance="item.balanceIssue" :decimals="item.decimals")
-    template(v-slot:item.allowanceIssue="{ item }")
-      v-alert(v-if="!item.allowanceIssue" dense text type="success" ).my-1 Valid
-      v-alert(v-else dense text type="error" ).my-1
-        span Insufficient
-
+ProgressIndicator(v-if="isLoading")
+v-container(fluid v-else)
+  div(v-if="nftAssets.length")
+    h2.mb-2 NFTs
+    v-data-table(
+      :headers="nftHeaders"
+      :items="nftAssets"
+      hide-default-footer
+      dense
+      disable-filtering
+      disable-sort
+    )
+      template(v-slot:item.token_address="{ item }")
+        NFTLink(:contract="item.token_address", :token-id="item.token_id")
+      template(v-slot:item.metadata="{ item }")
+        NFTMetadata(:data="item.metadata")
+      template(v-slot:item.ownershipIssue="{ item }")
+        v-alert(v-if="!item.ownershipIssue" dense text type="success").my-1 Valid
+        v-alert(v-else dense text type="error").my-1
+          span Invalid
+      template(v-slot:item.approvalIssue="{ item }")
+        v-alert(v-if="!item.approvalIssue" dense text type="success").my-1 Valid
+        v-alert(v-else dense text type="error").my-1
+          span Missing
+  div(v-if="erc20Assets.length")
+    h2.mt-4.mb-2 ERC20 Tokens
+    v-data-table(
+      :headers="erc20Headers"
+      :items="erc20Assets"
+      hide-default-footer
+      dense
+      disable-filtering
+      disable-sort
+    ).mt-3
+      template(v-slot:item.symbol="{ item }")
+        ContractLink(:address="item.symbol")
+      template(v-slot:item.address="{ item }")
+        ContractLink(:address="item.address")
+      template(v-slot:item.amount="{ item }")
+        TokenBalance(:balance="item.amount" :decimals="item.decimals")
+      template(v-slot:item.balanceIssue="{ item }")
+        v-alert(v-if="!item.balanceIssue" dense text type="success" ).my-1 Valid
+        v-alert(v-else dense text type="error" ).my-1
+          span Invalid:&nbsp;
+          TokenBalance(:balance="item.balanceIssue" :decimals="item.decimals")
+      template(v-slot:item.allowanceIssue="{ item }")
+        v-alert(v-if="!item.allowanceIssue" dense text type="success" ).my-1 Valid
+        v-alert(v-else dense text type="error" ).my-1
+          span Insufficient
 </template>
 <script>
 import _ from 'lodash'
@@ -57,6 +55,7 @@ import NFTLink from '@/components/NFTLink'
 import Moralis from '@/utils/moralis'
 import NFTMetadata from '@/components/NFTMetadata'
 import contracts from '@/utils/contracts'
+import ProgressIndicator from '@/components/ProgressIndicator'
 
 export default {
   name: 'OfferSideDigest',
@@ -64,6 +63,7 @@ export default {
   components: {
     NFTLink,
     NFTMetadata,
+    ProgressIndicator,
   },
   data () {
     return {

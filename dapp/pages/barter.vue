@@ -122,12 +122,13 @@ export default {
 
       console.log('side0', side0Assets, '\n\nside1', side1Assets)
 
-      const result = await barterContract.methods
-        .createOffer(this.side1.address, side0Assets, side1Assets)
-        .send({ from: this.address })
-
-      console.log('Offer created', result.events.OfferCreated)
-
+      try {
+        const result = await barterContract.methods
+          .createOffer(this.side1.address, side0Assets, side1Assets)
+          .send({ from: this.address })
+        console.log('Offer created', result.events.OfferCreated)
+      } catch (e) {
+      }
       function getAssetsForOffer (sideAssets) {
         const assets = []
         for (const asset of sideAssets.selectedItems) {

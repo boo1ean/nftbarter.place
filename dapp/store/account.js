@@ -8,6 +8,7 @@ const networks = [
     chainId: 56,
     explorerURL: 'https://bscscan.com',
     chain: 'bsc',
+    color: '#F8D12F',
     details: {
       chainId: 56,
       chainName: 'Binance Smart Chain',
@@ -22,6 +23,7 @@ const networks = [
     chainId: 43114,
     explorerURL: 'https://snowtrace.io',
     chain: 'avalanche',
+    color: '#e84142',
     details: {
       chainId: 43114,
       chainName: 'Avalanche',
@@ -36,6 +38,7 @@ const networks = [
     chainId: 137,
     explorerURL: 'https://polygonscan.com',
     chain: 'polygon',
+    color: '#8247e5',
     details: {
       chainId: 137,
       chainName: 'Polygon',
@@ -99,6 +102,12 @@ export const getters = {
     const address = getters.address
     return state.offers.filter(o => +o.status === 0 && o.side0.toLowerCase() === address)
   },
+  chain (state) {
+    return _.get(state, 'network.chain')
+  },
+  networkColor (state) {
+    return _.get(state, 'network.color', 'black')
+  },
 }
 
 export const actions = {
@@ -127,6 +136,7 @@ export const actions = {
       commit('setOffers', offers)
     } catch (e) {
       console.error('Offers fetch error', e)
+      commit('setOffers', [])
     }
   },
   setNetwork ({ commit }, network) {

@@ -9,8 +9,12 @@ v-app
   )
     | {{ notifications.notificationText }}
     v-btn(text @click="isNotificationVisible = false") Закрыть
-  v-app-bar(app clipped-left)
-    v-toolbar-title(class="ml-0 pl-4")
+  v-app-bar(
+    app
+    clipped-left
+    elevation="1"
+  )
+    v-toolbar-title(class="ml-0")
       v-app-bar-nav-icon(@click.stop="drawer = !drawer")
     v-spacer
     v-btn(
@@ -34,7 +38,14 @@ v-app
         :loading="isNetworkLoading"
       )
     v-btn(v-if="!account.address" text @click.stop="connectWallet") Connect wallet
-    v-btn(v-else text) {{ address | addressShort }}
+    v-btn(
+      v-else
+      :color="networkColor"
+      :class="{ 'white--text': network.chain !== 'bsc' }"
+      link
+      target="_blank"
+      :href="`${network.explorerURL}/address/${address}`"
+    ) {{ address | addressShort }}
   v-navigation-drawer(v-model="drawer" app clipped)
     div.d-flex.flex-column.justify-space-between.nav-wrapper
       v-list
@@ -136,6 +147,9 @@ export default {
         }
       },
     },
+    networkColor () {
+      return this.$store.getters['account/networkColor']
+    },
     isNotificationVisible: {
       get () {
         return this.notifications.isNotificationVisible
@@ -158,11 +172,19 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
 .nav-wrapper {
   height: 100%;
 }
 .network {
   width: 200px
 }
+/*.v-icon.v-icon {*/
+/*  color: rgb(232, 65, 66) !important;*/
+/*}*/
+/*.v-application .elevation-1 {*/
+/*  box-shadow: 0px 2px 1px -1px rgba(232, 65, 66, 0.2),*/
+/*  0px 1px 1px 0px rgba(232, 65, 66, 0.14),*/
+/*  0px 1px 3px 0px rgba(232, 65, 6, 0.12) !important;*/
+/*}*/
 </style>

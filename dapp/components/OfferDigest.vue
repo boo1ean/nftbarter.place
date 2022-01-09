@@ -1,30 +1,34 @@
 <template lang="pug">
-v-card(elevation=2)
-  v-card-title
-    span Offer \#{{ offer.id }}&nbsp;
-    span(v-if="isIncoming") from {{ offer.side0 }}
-    span(v-else) to {{ offer.side1 }}
-  v-card-text
-    v-row
-      v-col(lg="6" sm="12")
-        h2(v-if="isIncoming") You will get
-        h2(v-else) You will give
-        OfferSideDigest(:address="offer.side0" :assets="offer.side0Assets")
-      v-col(lg="6" sm="12")
-        h2(v-if="isIncoming") You will give
-        h2(v-else) You will get
-        OfferSideDigest(:address="offer.side1" :assets="offer.side1Assets")
-  v-card-actions
-    v-btn(v-if="isIncoming" @click="accept" color="primary") Accept
-    v-btn(v-else @click="cancel" color="error") Cancel
+v-container(fluid)
+  v-row
+    v-col(lg="6" sm="12")
+      v-card(
+        :color="isIncoming ? 'white lighten-5' : 'amber lighten-5'"
+        elevation=1
+      )
+        v-card-title
+          | {{ isIncoming ? 'NOT YOUR SIDE' : 'YOUR SIDE' }}
+        v-card-text
+          OfferDigestSide(:address="offer.side0" :assets="offer.side0Assets").digest-container
+    v-col(lg="6" sm="12")
+      v-card(
+        :color="!isIncoming ? 'white lighten-5' : 'amber lighten-5'"
+        elevation=1
+      )
+        v-card-title
+          | {{ !isIncoming ? 'NOT YOUR SIDE' : 'YOUR SIDE' }}
+        v-card-text
+          OfferDigestSide(:address="offer.side1" :assets="offer.side1Assets").digest-container
+  v-row
+    v-col
+      slot(name="actions")
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 import ContractLink from './ContractLink'
 import NFTLink from './NFTLink'
-import OfferSideDigest from '@/components/OfferSideDigest'
-import getBarterContract from '@/utils/barterContract'
+import OfferDigestSide from '@/components/OfferDigestSide'
 
 export default {
   name: 'OfferDigest',
@@ -32,7 +36,7 @@ export default {
   components: {
     ContractLink,
     NFTLink,
-    OfferSideDigest,
+    OfferDigestSide,
   },
   computed: {
     ...mapGetters('account', ['address']),
@@ -40,16 +44,10 @@ export default {
       return this.offer.side1.toLowerCase() === this.address.toLowerCase()
     },
   },
-  methods: {
-    async cancel () {
-      const contract = await getBarterContract()
-      await contract.methods.cancelOffer(this.offer.id).send({
-        from: this.address,
-      })
-    },
-    accept () {
-      console.log('accept')
-    },
-  },
 }
 </script>
+<style scoped>
+.digest-container {
+  min-height: 300px;
+}
+</style>

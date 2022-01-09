@@ -1,5 +1,5 @@
 <template lang="pug">
-v-card
+v-card(elevation=1)
   v-card-title {{ label }}
   v-card-subtitle
     v-text-field(
