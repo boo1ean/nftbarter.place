@@ -189,6 +189,10 @@ export default {
         case (OfferState.Creating): {
           this.isApprovalLoading = true
           const barterContract = await contracts.createBarterContract()
+          const options = {
+            value: await barterContract.methods.offerFee().call(),
+            from: this.pendingOffer.side0,
+          }
           try {
             const result = await barterContract.methods
               .createOffer(
@@ -196,7 +200,7 @@ export default {
                 this.pendingOffer.side0Assets,
                 this.pendingOffer.side1Assets,
               )
-              .send({ from: this.pendingOffer.side0 })
+              .send(options)
             const offerId = result.events.OfferCreated.returnValues.offerId
             this.isApprovalLoading = false
             this.$router.push(`/offers/${offerId}?chain=${this.account.network.chain}`)

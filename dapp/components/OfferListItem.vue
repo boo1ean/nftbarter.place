@@ -42,7 +42,7 @@ export default {
         result.push(`${side0nfts.length} NFTs`)
       }
       if (side0erc20.length > 0) {
-        result.push(`${side0nfts.length} Tokens`)
+        result.push(`${side0erc20.length} Tokens`)
       }
       if (!side0nfts.length && !side0erc20.length) {
         result.push('Nothing')
@@ -52,7 +52,7 @@ export default {
         result.push(`${side1nfts.length} NFTs`)
       }
       if (side1erc20.length > 0) {
-        result.push(`${side1nfts.length} Tokens`)
+        result.push(`${side1erc20.length} Tokens`)
       }
       if (!side1nfts.length && !side1erc20.length) {
         result.push('Nothing')

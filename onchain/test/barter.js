@@ -586,3 +586,4 @@ describe("Bartering", () => {
 // wrong nfts side1
 // missing approval side0
 // missing approval side1
+// Test permissions

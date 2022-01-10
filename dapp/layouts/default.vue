@@ -77,6 +77,12 @@ v-app
                 color="green"
                 :content="outgoingOffers.length"
               ).ml-3
+        v-list-item(v-if="isOwner" to="/dashboard" router exact)
+          v-list-item-action
+            v-icon mdi-chart-pie
+          v-list-item-content
+            v-list-item-title
+              span Dashboard
   v-main
     nuxt
 </template>
@@ -158,6 +164,9 @@ export default {
       set (val) {
         this.setVisibility(val)
       },
+    },
+    isOwner () {
+      return this.$store.state.account.isOwner
     },
   },
   methods: {

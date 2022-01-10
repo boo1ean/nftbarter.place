@@ -81,6 +81,7 @@ const initialState = {
   networks,
   network: null,
   address: null,
+  isOwner: false,
 }
 
 export const state = () => ({ ...initialState })
@@ -102,6 +103,9 @@ export const mutations = {
     console.log('account.mutations.setAccount', { address, chainId })
     state.address = address
     state.network = _.find(networks, { chainId })
+  },
+  setOwner (state, value) {
+    state.isOwner = value
   },
 }
 
@@ -171,6 +175,9 @@ export const actions = {
       const chainId = await Moralis.getChainId()
       commit('setupAccount', { address, chainId })
       dispatch('fetchAccountOffers')
+      const barterContract = await contracts.createBarterContract()
+      const owner = await barterContract.methods.owner().call()
+      commit('setOwner', owner.toLowerCase() === address.toLowerCase())
     }
   },
   async ensureChain ({ commit }, chain) {
@@ -184,7 +191,6 @@ export const actions = {
     } catch (e) {}
   },
 }
-
 function assignUniqueId (nft) {
   nft.uniqueId = `${nft.token_address}-${nft.token_id}`
   return nft
