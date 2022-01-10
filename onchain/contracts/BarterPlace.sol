@@ -10,7 +10,7 @@ contract BarterPlace is Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _offerIdCounter;
     
-    uint256 offerFee;
+    uint256 private _offerFee;
     
     enum OfferStatus {
         Pending,
@@ -53,13 +53,17 @@ contract BarterPlace is Ownable {
     } 
     
     function setOfferFee (uint256 newOfferFee) public onlyOwner {
-        offerFee = newOfferFee;
+        _offerFee = newOfferFee;
+    }
+    
+    function offerFee () public view returns (uint256) {
+        return _offerFee;
     }
     
     function withdrawBalance (address payable to) public payable onlyOwner {
         to.transfer(address(this).balance);
     }
-
+    
     // Barter between side0 and side1 addresses
     // side0 - msg.sender
     // side1 - specified in call
@@ -69,7 +73,7 @@ contract BarterPlace is Ownable {
         BarterAsset[] calldata side1Assets) payable public {
         address side0 = msg.sender;
 
-        require(msg.value >= offerFee, "Invalid create offer fee amount");
+        require(msg.value >= _offerFee, "Invalid create offer fee amount");
     
         uint256 offerId = _offerIdCounter.current();
         

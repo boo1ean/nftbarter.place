@@ -174,7 +174,50 @@ describe("Bartering", () => {
 		expect(side0Offer).to.be.deep.equal(side1Offer)
 	});
 
-    it('Accept barter offer', async () => {
+	it("Check offer fee", async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
+		const side1Assets = await mintNFT(NFT1Contract, side1.address, 2)
+		await approveNFTS(owner, barterContract.address, NFT1Contract)
+		
+		const offerFee = 100000
+		await (await barterContract.setOfferFee(offerFee)).wait()
+
+        try {
+			await (await barterContract.createOffer(
+				side1.address,
+				side0Assets,
+				side1Assets
+			)).wait()
+			expect(true).to.be.false
+		} catch (e) {
+			expect(e).to.be.ok
+		}
+		
+		const offerFeeFromContract = await barterContract.offerFee()
+		expect(offerFeeFromContract).to.be.eq(offerFee)
+
+		const result = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets, { value: offerFee }
+		)).wait()
+		expect(result).to.be.ok
+        
+		const result2 = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets, { value: offerFee }
+		)).wait()
+		expect(result2).to.be.ok
+        
+		const balance = await barterContract.provider.getBalance(barterContract.address)
+        expect(balance).to.be.eq(offerFee * 2)
+	});
+
+	it('Accept barter offer', async () => {
 		let side0 = signers[0]
 		let side1 = signers[1]
 
@@ -535,8 +578,6 @@ describe("Bartering", () => {
 	}
 })
 
-// set and check fee
-// wrong fee
 // wrong nfts side1
 // missing approval side0
 // missing approval side1
