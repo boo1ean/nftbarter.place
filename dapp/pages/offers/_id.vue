@@ -21,6 +21,7 @@ import ProgressIndicator from '@/components/ProgressIndicator'
 import contracts from '@/utils/contracts'
 export default {
   name: 'OfferDetails',
+  middleware: 'auth',
   components: {
     ProgressIndicator,
   },

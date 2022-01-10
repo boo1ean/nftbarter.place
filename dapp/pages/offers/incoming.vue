@@ -12,6 +12,7 @@ import { mapState, mapGetters } from 'vuex'
 import OfferListItem from '@/components/OfferListItem'
 export default {
   name: 'IncomingOffers',
+  middleware: 'auth',
   components: {
     OfferListItem,
   },

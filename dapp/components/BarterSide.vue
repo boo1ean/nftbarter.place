@@ -4,12 +4,14 @@ v-card(elevation=1)
   v-card-subtitle
     v-text-field(
       v-model="dynamicAddress"
-      :disabled="!!address"
+      :disabled="!!address || !isWalletConnected"
       append-icon="mdi-wallet"
       label="Participant address"
       filled
       single-line
       hide-details
+      @input="validateAddress"
+      :error="isAddressInvalid"
     ).mb-2
   v-card-text
     span(v-if="!selectedItems.length && !erc20Assets.length") No items added yet..
@@ -69,7 +71,8 @@ v-card(elevation=1)
               v-bind="attrs"
               block
               v-on="on"
-              @click="openDialog()") Add NFT
+              :disabled="!hasValidAddress"
+              @click="openAddNFTDialog()") Add NFT
           v-card(v-if="!dynamicAddress")
             v-card-title.d-flex.justify-center.align-center.mb-1
               | Enter participant address before adding
@@ -113,6 +116,7 @@ v-card(elevation=1)
               block
               color="primary"
               v-bind="attrs"
+              :disabled="!hasValidAddress"
               v-on="on") Add ERC20
           AddERC20(
             :address="dynamicAddress"
@@ -141,6 +145,7 @@ export default {
   props: [
     'label',
     'address',
+    'isCurrentUser',
   ],
   components: {
     NFTMetadata,
@@ -183,6 +188,7 @@ export default {
       dialog: false,
       dialogERC20: false,
       confirmed: false,
+      isAddressInvalid: false,
     }
   },
   computed: {
@@ -205,6 +211,12 @@ export default {
     hasItems () {
       return this.selectedItems.length || this.erc20Assets.length
     },
+    hasValidAddress () {
+      return this.dynamicAddress && !this.isAddressInvalid
+    },
+    isWalletConnected () {
+      return this.$store.getters['account/address']
+    },
   },
   watch: {
     customAddress () {
@@ -215,7 +227,7 @@ export default {
     },
   },
   methods: {
-    async openDialog () {
+    async openAddNFTDialog () {
       if (!this.dynamicAddress) {
         this.dialog = false
         return
@@ -258,6 +270,10 @@ export default {
     makeDirty () {
       this.confirmed = false
       this.$emit('dirty')
+    },
+    validateAddress () {
+      const web3Utils = new Moralis.Web3()
+      this.isAddressInvalid = !web3Utils.utils.isAddress(this.dynamicAddress)
     },
   },
 }

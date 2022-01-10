@@ -15,14 +15,15 @@ v-app
     elevation="1"
   )
     v-toolbar-title(class="ml-0")
-      v-app-bar-nav-icon(@click.stop="drawer = !drawer")
+      v-app-bar-nav-icon(v-if="address" @click.stop="drawer = !drawer")
+      span nftbarter.place
     v-spacer
-    v-btn(
-      icon
-      @click="refresh"
-      v-if="address"
-    )
-      v-icon mdi-refresh
+    //v-btn(
+    //  icon
+    //  @click="refresh"
+    //  v-if="address"
+    //)
+    //  v-icon mdi-refresh
     .network.mx-2
       v-select(
         v-if="address"
@@ -37,7 +38,7 @@ v-app
         v-model="network"
         :loading="isNetworkLoading"
       )
-    v-btn(v-if="!account.address" text @click.stop="connectWallet") Connect wallet
+    v-btn(v-if="!account.address" text @click.stop="connectWallet") Connect with metamask
     v-btn(
       v-else
       :color="networkColor"
@@ -46,10 +47,10 @@ v-app
       target="_blank"
       :href="`${network.explorerURL}/address/${address}`"
     ) {{ address | addressShort }}
-  v-navigation-drawer(v-model="drawer" app clipped)
+  v-navigation-drawer(v-if="address" v-model="drawer" app clipped)
     div.d-flex.flex-column.justify-space-between.nav-wrapper
       v-list
-        v-list-item(to="/barter" router exact)
+        v-list-item(to="/" router exact)
           v-list-item-action
             v-icon mdi-repeat
           v-list-item-content
@@ -179,12 +180,4 @@ export default {
 .network {
   width: 200px
 }
-/*.v-icon.v-icon {*/
-/*  color: rgb(232, 65, 66) !important;*/
-/*}*/
-/*.v-application .elevation-1 {*/
-/*  box-shadow: 0px 2px 1px -1px rgba(232, 65, 66, 0.2),*/
-/*  0px 1px 1px 0px rgba(232, 65, 66, 0.14),*/
-/*  0px 1px 3px 0px rgba(232, 65, 6, 0.12) !important;*/
-/*}*/
 </style>
