@@ -60,7 +60,7 @@ contract BarterPlace is Ownable {
         return _offerFee;
     }
     
-    function withdrawBalance (address payable to) public payable onlyOwner {
+    function withdrawBalance (address payable to) public onlyOwner {
         to.transfer(address(this).balance);
     }
     

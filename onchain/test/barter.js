@@ -215,6 +215,11 @@ describe("Bartering", () => {
         
 		const balance = await barterContract.provider.getBalance(barterContract.address)
         expect(balance).to.be.eq(offerFee * 2)
+        
+		const balanceBefore = await barterContract.provider.getBalance(side1.address)
+		await (await barterContract.withdrawBalance(side1.address)).wait()
+		const balanceAfter = await barterContract.provider.getBalance(side1.address)
+		expect(balanceAfter).to.be.eq(balanceBefore.add(offerFee * 2))
 	});
 
 	it('Accept barter offer', async () => {
