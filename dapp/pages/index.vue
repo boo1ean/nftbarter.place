@@ -1,5 +1,5 @@
 <template lang="pug">
-v-container(fluid).justify-lg-space-between.flex-column.d-flex
+v-container(fluid)
   v-sheet(
     v-if="!isWalletConnected"
     elevation=1
@@ -14,9 +14,12 @@ v-container(fluid).justify-lg-space-between.flex-column.d-flex
       x-large
       @click.stop="connectWallet"
     ).mt-3 CONNECT WITH METAMASK
-  ProgressIndicator(v-if="isApprovalLoading" :big="true").mt-10.pt-10
-  OfferDigest(v-else-if="pendingOffer" :offer="pendingOffer")
-  v-row(v-else)
+  v-overlay(:value="isLoading")
+    v-alert(color="white")
+      span.black-text {{ loadingText }}
+      ProgressIndicator.my-4
+  OfferDigest(v-if="pendingOffer" :offer="pendingOffer")
+  v-row(v-show="offerState === 0")
     v-col(sm=12 lg=6)
       BarterSide(
         label="Your offer"
@@ -30,13 +33,14 @@ v-container(fluid).justify-lg-space-between.flex-column.d-flex
         @confirm="confirmSide1"
         @dirty="makeSide1Dirty"
       )
-  v-row.fill-height
+  v-row.mt-lg-10
     v-col(
       lg=6 offset-lg=3
       sm=12
-    ).d-flex.justify-end.flex-column
-      v-card(height=215)
+    )
+      v-card
         v-card-title Creating barter offer
+        v-card-subtitle {{ stepInstruction }}
         v-card-text
           v-stepper(
             elevation=0
@@ -50,19 +54,26 @@ v-container(fluid).justify-lg-space-between.flex-column.d-flex
               v-stepper-step(:complete='offerState > 2' step='2') Approve permissions
               v-divider
               v-stepper-step(step='3') Create offer
-        v-card-actions
+        v-card-actions.d-flex
+          v-btn(
+            v-if="offerState > 0"
+            @click="backBarter")
+              v-icon mdi-keyboard-backspace
+              | &nbsp;Back
           v-btn(
             color="success"
-            block
             @click="continueBarter"
             :disabled="!side0 || !side1"
-          ) {{ continueText }}
+          ).flex-grow-1 {{ continueText }}
 </template>
 
-<style>
+<style scoped>
 .hello {
   color: white;
   font-size: 2rem;
+}
+.black-text {
+  color: black !important;
 }
 </style>
 
@@ -92,6 +103,13 @@ const ContinueTexts = {
   [OfferState.Creating]: 'Create offer',
 }
 
+const Instructions = {
+  [OfferState.Initial]: 'Specify counterparty address and select assets for each side',
+  [OfferState.Preview]: 'Make sure everything is correct and proceed to approvals',
+  [OfferState.Approvals]: 'Allow barter contract to move selected assets',
+  [OfferState.Creating]: 'Seems good? Hit the create offer button',
+}
+
 export default {
   name: 'PageBarter',
   components: {
@@ -109,7 +127,8 @@ export default {
       side0: null,
       side1: null,
       pendingOffer: null,
-      isApprovalLoading: false,
+      isLoading: false,
+      loadingText: 'Waiting for transaction to complete',
     }
   },
   computed: {
@@ -123,6 +142,9 @@ export default {
     },
     isWalletConnected () {
       return this.address
+    },
+    stepInstruction () {
+      return Instructions[this.offerState]
     },
   },
   methods: {
@@ -147,7 +169,7 @@ export default {
           let didGetAllApprovals = true
           const usedNftAddresses = {}
           for (const asset of this.pendingOffer.side0Assets) {
-            this.isApprovalLoading = true
+            this.isLoading = true
             try {
               switch (asset.assetType) {
                 case AssetType.erc721: {
@@ -157,6 +179,7 @@ export default {
                   const contract = await contracts.createERC721(asset.contractAddress)
                   const hasApproval = await contract.methods.isApprovedForAll(this.pendingOffer.side0, barterContractAddress).call({ from: this.pendingOffer.side0 })
                   if (!hasApproval) {
+                    this.loadingText = 'Waiting for ERC721 approval transaction to complete'
                     await contract.methods.setApprovalForAll(barterContractAddress, true).send({ from: this.pendingOffer.side0 })
                   }
                   usedNftAddresses[asset.contractAddress] = true
@@ -166,6 +189,7 @@ export default {
                   const contract = await contracts.createERC20(asset.contractAddress)
                   const allowance = await contract.methods.allowance(this.pendingOffer.side0, barterContractAddress).call({ from: this.pendingOffer.side0 })
                   if (toBN(allowance).cmp(toBN(asset.amount)) === -1 || confirm('You already have allowance, need more?')) {
+                    this.loadingText = 'Waiting for ERC20 approval transaction to complete'
                     await contract.methods.approve(barterContractAddress, asset.amount).send({ from: this.pendingOffer.side0 })
                   }
                   break
@@ -175,18 +199,20 @@ export default {
               console.log('Approval failed', e)
               didGetAllApprovals = false
             }
-            this.isApprovalLoading = false
+            this.isLoading = false
           }
           if (didGetAllApprovals) {
             this.offerState = OfferState.Creating
           } else {
             alert('Sorry, there are some issues with your approvals, please try again')
           }
-          this.isApprovalLoading = false
+          this.pendingOffer = { ...this.pendingOffer }
+          this.isLoading = false
           break
         }
         case (OfferState.Creating): {
-          this.isApprovalLoading = true
+          this.isLoading = true
+          this.loadingText = 'Waiting for offer creation transaction to complete'
           const barterContract = await contracts.createBarterContract()
           const options = {
             value: await barterContract.methods.offerFee().call(),
@@ -201,13 +227,13 @@ export default {
               )
               .send(options)
             const offerId = result.events.OfferCreated.returnValues.offerId
-            this.isApprovalLoading = false
+            this.isLoading = false
             this.$router.push(`/offers/${offerId}?chain=${this.account.network.chain}`)
             this.$store.dispatch('account/sync')
           } catch (e) {
             console.log('Offer creation error', { offer: this.pendingOffer }, e)
           }
-          this.isApprovalLoading = false
+          this.isLoading = false
           break
         }
       }
@@ -274,6 +300,18 @@ export default {
     },
     connectWallet () {
       this.$store.dispatch('account/login')
+    },
+    backBarter () {
+      switch (this.offerState) {
+        case (OfferState.Creating): {
+          this.offerState = OfferState.Approvals
+          break
+        }
+        default:
+          this.pendingOffer = null
+          this.offerState = OfferState.Initial
+          break
+      }
     },
   },
 }
