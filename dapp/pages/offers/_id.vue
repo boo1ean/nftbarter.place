@@ -1,5 +1,9 @@
 <template lang="pug">
 v-container(fluid v-if="isWalletConnected && offer")
+  v-overlay(v-if="isLoading")
+    v-alert(color="white" elevation=1)
+      span.black-text {{ loadingMessage }}
+      ProgressIndicator.my-4
   OfferDigest(:offer="offer")
     template(v-slot:actions)
       div(v-if="isOfferPending")
@@ -29,6 +33,7 @@ export default {
     return {
       offer: null,
       isLoading: false,
+      loadingMessage: 'Waiting for cancel transaction',
     }
   },
   mounted () {
@@ -104,6 +109,7 @@ export default {
     async cancelOffer () {
       try {
         this.isLoading = true
+        this.loadingMessage = 'Waiting for cancel transaction'
         const barterContract = await contracts.createBarterContract(this.requestedChain)
         await barterContract.methods.cancelOffer(this.offer.id).send({
           from: this.currentUserAddress,
@@ -118,6 +124,7 @@ export default {
     async acceptOffer () {
       try {
         this.isLoading = true
+        this.loadingMessage = 'Waiting for accept transaction'
         const barterContract = await contracts.createBarterContract(this.requestedChain)
         await barterContract.methods.acceptOffer(this.offer.id).send({
           from: this.currentUserAddress,
@@ -132,3 +139,8 @@ export default {
   },
 }
 </script>
+<style scoped>
+.black-text {
+  color: black !important;
+}
+</style>

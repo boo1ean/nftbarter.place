@@ -77,7 +77,8 @@ v-card(elevation=1)
             v-card-title.d-flex.justify-center.align-center.mb-1
               | Enter participant address before adding
           v-card(v-else-if="isLoading")
-            v-card-title.d-flex.justify-center.align-center.mb-1
+            v-card-title.d-flex.justify-center.align-center.mb-1.flex-column
+              span Loading NFTs..
               ProgressIndicator.ma-4
           v-card(v-else)
             v-card-title.text-h5 Select items
@@ -128,7 +129,7 @@ v-card(elevation=1)
         v-btn(
           color="success"
           block
-          :disabled="confirmed || !dynamicAddress"
+          :disabled="confirmed || !dynamicAddress || isAddressInvalid"
           @click="confirm") {{ confirmed ? 'Confirmed' : hasItems ? 'Confirm assets' : 'Confirm without assets' }}
 </template>
 <script>

@@ -3,7 +3,8 @@ v-card(v-if="!address")
   v-card-title.d-flex.justify-center.align-center.mb-1
     | Enter participant address before adding
 v-card(v-else-if="isLoading")
-  v-card-title.d-flex.justify-center.align-center.mb-1
+  v-card-title.d-flex.justify-center.align-center.mb-1.flex-column
+    span Loading ERC20 balances..
     ProgressIndicator.ma-4
 v-card(v-else)
   v-card-title.text-h5 Add ERC20 tokens

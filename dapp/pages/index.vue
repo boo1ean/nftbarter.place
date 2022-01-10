@@ -1,5 +1,5 @@
 <template lang="pug">
-v-container(fluid)
+v-container(fluid).justify-lg-space-between.flex-column.d-flex
   v-sheet(
     v-if="!isWalletConnected"
     elevation=1
@@ -30,37 +30,36 @@ v-container(fluid)
         @confirm="confirmSide1"
         @dirty="makeSide1Dirty"
       )
-  .actions-container
-    v-card
-      v-card-title Creating barter offer
-      v-card-text
-        v-stepper(
-          elevation=0
-          v-model="offerState"
-        )
-          v-stepper-header
-            v-stepper-step(:complete='offerState > 0' step='0') Select Assets
-            v-divider
-            v-stepper-step(:complete='offerState > 1' step='1') Preview
-            v-divider
-            v-stepper-step(:complete='offerState > 2' step='2') Approve permissions
-            v-divider
-            v-stepper-step(step='3') Create offer
-      v-card-actions
-        v-btn(
-          color="success"
-          block
-          @click="continueBarter"
-          :disabled="!side0 || !side1"
-        ) {{ continueText }}
+  v-row.fill-height
+    v-col(
+      lg=6 offset-lg=3
+      sm=12
+    ).d-flex.justify-end.flex-column
+      v-card(height=215)
+        v-card-title Creating barter offer
+        v-card-text
+          v-stepper(
+            elevation=0
+            v-model="offerState"
+          )
+            v-stepper-header
+              v-stepper-step(:complete='offerState > 0' step='0') Select Assets
+              v-divider
+              v-stepper-step(:complete='offerState > 1' step='1') Preview
+              v-divider
+              v-stepper-step(:complete='offerState > 2' step='2') Approve permissions
+              v-divider
+              v-stepper-step(step='3') Create offer
+        v-card-actions
+          v-btn(
+            color="success"
+            block
+            @click="continueBarter"
+            :disabled="!side0 || !side1"
+          ) {{ continueText }}
 </template>
 
 <style>
-.actions-container {
-  position: fixed;
-  bottom: 30px;
-  right: 30px
-}
 .hello {
   color: white;
   font-size: 2rem;
