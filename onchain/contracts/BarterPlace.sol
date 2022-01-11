@@ -10,7 +10,8 @@ contract BarterPlace is Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _offerIdCounter;
     
-    uint256 private _offerFee;
+    uint256 private _offerCreateFee;
+    uint256 private _offerAcceptFee;
     
     enum OfferStatus {
         Pending,
@@ -39,6 +40,8 @@ contract BarterPlace is Ownable {
         BarterAsset[] side0Assets;
         BarterAsset[] side1Assets;
         OfferStatus status;
+        uint256 createdAt;
+        uint256 updatedAt;
     }
     
     mapping (uint256 => BarterOffer) offersById;
@@ -52,14 +55,22 @@ contract BarterPlace is Ownable {
         
     } 
     
-    function setOfferFee (uint256 newOfferFee) public onlyOwner {
-        _offerFee = newOfferFee;
+    function setCreateOfferFee (uint256 newOfferFee) public onlyOwner {
+        _offerCreateFee = newOfferFee;
     }
     
-    function offerFee () public view returns (uint256) {
-        return _offerFee;
+    function offerCreateFee () public view returns (uint256) {
+        return _offerCreateFee;
     }
     
+    function setAcceptOfferFee (uint256 newOfferFee) public onlyOwner {
+        _offerAcceptFee = newOfferFee;
+    }
+
+    function offerAcceptFee () public view returns (uint256) {
+        return _offerAcceptFee;
+    }
+
     function withdrawBalance (address payable to) public onlyOwner {
         to.transfer(address(this).balance);
     }
@@ -73,7 +84,7 @@ contract BarterPlace is Ownable {
         BarterAsset[] calldata side1Assets) payable public {
         address side0 = msg.sender;
 
-        require(msg.value >= _offerFee, "Invalid create offer fee amount");
+        require(msg.value >= _offerCreateFee, "Invalid create offer fee amount");
     
         uint256 offerId = _offerIdCounter.current();
         
@@ -81,6 +92,7 @@ contract BarterPlace is Ownable {
         offersById[offerId].id = offerId;
         offersById[offerId].side0 = side0;
         offersById[offerId].side1 = side1;
+        offersById[offerId].createdAt = block.timestamp;
         
         for (uint256 i = 0; i < side0Assets.length; ++i) {
             offersById[offerId].side0Assets.push(side0Assets[i]);
@@ -97,10 +109,12 @@ contract BarterPlace is Ownable {
         emit OfferCreated(offerId, side0, side1);
     }
     
-    function acceptOffer (uint256 offerId) public {
+    function acceptOffer (uint256 offerId) payable public {
         BarterOffer storage offer = offersById[offerId];
         require(offer.side1 == msg.sender, 'Sender is not offer participant');
         require(offer.status == OfferStatus.Pending, 'Offer status is not pending (canceled or fulfilled)');
+
+        require(msg.value >= _offerAcceptFee, "Invalid accept offer fee amount");
         
 /*
         _verifyOwnership(offer.side0, offer.side0Assets);
@@ -111,6 +125,7 @@ contract BarterPlace is Ownable {
         _transferAssets(offer.side1, offer.side0, offer.side1Assets);
         
         offer.status = OfferStatus.Fulfilled;
+        offer.updatedAt = block.timestamp;
         emit OfferAccepted(offer.id, offer.side0, offer.side1);
     }
     
@@ -120,6 +135,7 @@ contract BarterPlace is Ownable {
         require(offer.status == OfferStatus.Pending, 'Offer status is not pending (canceled or fulfilled)');
 
         offer.status = OfferStatus.Canceled;
+        offer.updatedAt = block.timestamp;
         emit OfferCanceled(offer.id, offer.side0, offer.side1);
     }
 
