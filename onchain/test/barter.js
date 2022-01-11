@@ -180,10 +180,11 @@ describe("Bartering", () => {
 
 		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
 		const side1Assets = await mintNFT(NFT1Contract, side1.address, 2)
-		await approveNFTS(owner, barterContract.address, NFT1Contract)
+		await approveNFTS(side0, barterContract.address, NFT1Contract)
+		await approveNFTS(side1, barterContract.address, NFT1Contract)
 		
 		const offerFee = 100000
-		await (await barterContract.setOfferFee(offerFee)).wait()
+		await (await barterContract.setCreateOfferFee(offerFee)).wait()
 
         try {
 			await (await barterContract.createOffer(
@@ -196,7 +197,7 @@ describe("Bartering", () => {
 			expect(e).to.be.ok
 		}
 		
-		const offerFeeFromContract = await barterContract.offerFee()
+		const offerFeeFromContract = await barterContract.offerCreateFee()
 		expect(offerFeeFromContract).to.be.eq(offerFee)
 
 		const result = await (await barterContract.createOffer(
@@ -220,6 +221,26 @@ describe("Bartering", () => {
 		await (await barterContract.withdrawBalance(side1.address)).wait()
 		const balanceAfter = await barterContract.provider.getBalance(side1.address)
 		expect(balanceAfter).to.be.eq(balanceBefore.add(offerFee * 2))
+
+		await (await barterContract.setAcceptOfferFee(offerFee)).wait()
+		const offerAcceptFee = await barterContract.offerAcceptFee()
+		expect(offerAcceptFee).to.be.eq(offerFee)
+
+		const offerId = result.events[0].args.offerId
+		try {
+			await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+			expect(true).to.be.false
+		} catch (e) {
+			expect(e.message.indexOf('Invalid accept offer fee amount') !== -1).to.be.true
+		}
+		
+		const acceptResult = await (await barterContract.connect(side1).acceptOffer(offerId, { value: offerFee })).wait()
+		const acceptEvent = acceptResult.events[acceptResult.events.length - 1]
+		
+		expect(acceptEvent.args.side0).to.be.eq(side0.address)
+		expect(acceptEvent.args.side1).to.be.eq(side1.address)
+
+		expect(await NFT1Contract.ownerOf(side1Assets[0].tokenId)).to.be.eq(side0.address)
 	});
 
 	it('Accept barter offer', async () => {
