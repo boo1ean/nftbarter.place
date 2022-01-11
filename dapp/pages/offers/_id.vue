@@ -2,13 +2,13 @@
 v-container(fluid v-if="isWalletConnected && offer")
   v-overlay(v-if="isLoading")
     v-alert(color="white" elevation=1)
-      span.black-text {{ loadingMessage }}
+      span.black-text {{ loadingText }}
       ProgressIndicator.my-4
   OfferDigest(:offer="offer")
     template(v-slot:actions)
       div(v-if="isOfferPending")
         v-btn(v-if="isSide0" @click="cancelOffer" color="error").mr-3 Cancel
-        v-btn(v-if="isSide1" @click="acceptOffer" color="primary") Accept
+        v-btn(v-if="isSide1" @click="approvePermissionsAndAccept" color="primary") Accept
       div(v-else)
         v-alert(:type="offerStatusAlertType") This offer is {{ offerStatus }}
 .d-flex.justify-center.align-center.fill-height.flex-column(v-else-if="isWalletConnected && mismatchChain")
@@ -23,6 +23,9 @@ v-container(fluid v-if="isWalletConnected && offer")
 import { mapState } from 'vuex'
 import ProgressIndicator from '@/components/ProgressIndicator'
 import contracts from '@/utils/contracts'
+import { AssetType } from '@/utils/enums'
+import { toBN } from '@/utils/utils'
+
 export default {
   name: 'OfferDetails',
   middleware: 'auth',
@@ -38,7 +41,7 @@ export default {
     return {
       offer: null,
       isLoading: false,
-      loadingMessage: 'Waiting for cancel transaction',
+      loadingText: 'Waiting for cancel transaction',
     }
   },
   mounted () {
@@ -114,7 +117,7 @@ export default {
     async cancelOffer () {
       try {
         this.isLoading = true
-        this.loadingMessage = 'Waiting for cancel transaction'
+        this.loadingText = 'Waiting for cancel transaction'
         const barterContract = await contracts.createBarterContract(this.requestedChain)
         await barterContract.methods.cancelOffer(this.offer.id).send({
           from: this.currentUserAddress,
@@ -129,7 +132,7 @@ export default {
     async acceptOffer () {
       try {
         this.isLoading = true
-        this.loadingMessage = 'Waiting for accept transaction'
+        this.loadingText = 'Waiting for accept transaction'
         const barterContract = await contracts.createBarterContract(this.requestedChain)
         await barterContract.methods.acceptOffer(this.offer.id).send({
           from: this.currentUserAddress,
@@ -140,6 +143,54 @@ export default {
         console.error('Accept offer error', e)
       }
       this.isLoading = false
+    },
+    async approvePermissionsAndAccept () {
+      const barterContractAddress = await contracts.addresses().barter
+      let didGetAllApprovals = true
+      const usedNftAddresses = {}
+      for (const asset of this.offer.side1Assets) {
+        this.isLoading = true
+        try {
+          switch (+asset.assetType) {
+            case AssetType.erc721: {
+              if (usedNftAddresses[asset.contractAddress]) {
+                continue
+              }
+              const contract = await contracts.createERC721(asset.contractAddress)
+              const hasApproval = await contract.methods.isApprovedForAll(this.offer.side1, barterContractAddress).call({ from: this.offer.side1 })
+              if (!hasApproval) {
+                this.loadingText = 'Waiting for ERC721 approval transaction to complete'
+                await contract.methods.setApprovalForAll(barterContractAddress, true).send({ from: this.offer.side1 })
+              }
+              usedNftAddresses[asset.contractAddress] = true
+              break
+            }
+            case AssetType.erc20: {
+              const contract = await contracts.createERC20(asset.contractAddress)
+              const allowance = await contract.methods.allowance(this.offer.side1, barterContractAddress).call({ from: this.offer.side1 })
+              if (toBN(allowance).cmp(toBN(asset.amount)) === -1 || confirm('You already have allowance, need more?')) {
+                this.loadingText = 'Waiting for ERC20 approval transaction to complete'
+                await contract.methods.approve(barterContractAddress, asset.amount).send({ from: this.offer.side1 })
+              }
+              break
+            }
+            default:
+              didGetAllApprovals = false
+              window.alert('Something went wrong')
+          }
+        } catch (e) {
+          console.log('Approval failed', e)
+          didGetAllApprovals = false
+        }
+        this.isLoading = false
+      }
+      if (didGetAllApprovals) {
+        this.acceptOffer()
+      } else {
+        this.isLoading = false
+        alert('Sorry, there are some issues with your approvals, please try again')
+      }
+      this.offer = { ...this.offer }
     },
   },
 }

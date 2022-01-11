@@ -86,17 +86,14 @@ import Moralis from 'moralis'
 import NFTMetadata from '../components/NFTMetadata'
 import BarterSide from '../components/BarterSide'
 import contracts from '@/utils/contracts'
+import { AssetType } from '@/utils/enums'
+import { toBN } from '@/utils/utils'
 
 const OfferState = {
   Initial: 0,
   Preview: 1,
   Approvals: 2,
   Creating: 3,
-}
-
-const AssetType = {
-  erc721: 0,
-  erc20: 1,
 }
 
 const ContinueTexts = {
@@ -176,7 +173,6 @@ export default {
       this.dialog = false
     },
     async continueBarter () {
-      const web3Utils = new Moralis.Web3()
       switch (this.offerState) {
         case (OfferState.Initial): {
           this.pendingOffer = getOffer(this)
@@ -302,9 +298,6 @@ export default {
       }
       function getERC20Amount (erc20) {
         return Moralis.Units.Token(erc20.amount, erc20.decimals).toString()
-      }
-      function toBN (val) {
-        return web3Utils.utils.toBN(val)
       }
     },
     confirmSide0 (side0) {

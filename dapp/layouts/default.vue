@@ -14,17 +14,24 @@ v-app
     clipped-left
     elevation="1"
   )
-    img(
-      src="~/assets/logo-color.png"
-      height=40
-      width=40
-      @click.stop="toggleDrawer"
-    ).mr-4
+    img(v-if="!account.address" src="~/assets/logo-color.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
+    img(v-else-if="'bsc' === network.chain" src="~/assets/logo-bsc.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
+    img(v-else-if="'polygon' === network.chain" src="~/assets/logo-polygon.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
+    img(v-else-if="'eth' === network.chain" src="~/assets/logo-eth.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
+    img(v-else-if="'avalanche' === network.chain" src="~/assets/logo-avax.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
+    img(v-else-if="'ropsten' === network.chain" src="~/assets/logo-ropsten.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
     v-toolbar-items.d-none.d-md-flex
       v-btn-toggle(borderless group dense).align-center
         v-btn(v-for="(item, i) in drawerItems" :key="i" :to="item.to" router nuxt)
           v-icon.mr-2 {{ item.icon }}
           | {{ item.title }}
+          v-badge(
+            v-if="item.offers && pendingOffers.length"
+            inline
+            tile
+            :color="networkColor"
+            :content="pendingOffers.length"
+          )
     v-spacer
     .network.mx-2
       v-select(
@@ -52,32 +59,17 @@ v-app
   v-navigation-drawer(v-if="address" v-model="drawer" app clipped)
     div.d-flex.flex-column.justify-space-between.nav-wrapper
       v-list
-        v-list-item(to="/" router exact)
+        v-list-item(v-for="(item, i) in drawerItems" :key="i" :to="item.to" router exact)
           v-list-item-action
-            v-icon mdi-repeat
-          v-list-item-content
-            v-list-item-title Create Barter Offer
-        v-list-item(to="/offers/incoming" router exact)
-          v-list-item-action
-            v-icon mdi-undo
+            v-icon {{ item.icon }}
           v-list-item-content
             v-list-item-title
-              span Incoming Offers
+              span {{ item.title }}
               v-badge(
-                v-if="incomingOffers.length"
-                color="green"
-                :content="incomingOffers.length"
-              ).ml-3
-        v-list-item(to="/offers/Outgoing" router exact)
-          v-list-item-action
-            v-icon mdi-redo
-          v-list-item-content
-            v-list-item-title
-              span Outgoing Offers
-              v-badge(
-                v-if="outgoingOffers.length"
-                color="green"
-                :content="outgoingOffers.length"
+                v-if="item.offers && pendingOffers.length"
+                tile
+                :color="networkColor"
+                :content="pendingOffers.length"
               ).ml-3
         v-list-item(v-if="isOwner" to="/dashboard" router exact)
           v-list-item-action
@@ -116,6 +108,7 @@ export default {
           title: 'My Offers',
           icon: 'mdi-view-list',
           to: '/offers',
+          offers: true,
         },
         {
           title: 'FAQ',
@@ -165,7 +158,7 @@ export default {
   },
   computed: {
     ...mapState(['notifications', 'account']),
-    ...mapGetters('account', ['address', 'incomingOffers', 'outgoingOffers']),
+    ...mapGetters('account', ['address', 'pendingOffers']),
     network: {
       get () {
         return this.selectedNetwork

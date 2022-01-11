@@ -8,7 +8,7 @@ const networks = [
     chainId: 56,
     explorerURL: 'https://bscscan.com',
     chain: 'bsc',
-    color: '#F8D12F',
+    color: '#F0B90B',
     details: {
       chainId: 56,
       chainName: 'Binance Smart Chain',
@@ -120,6 +120,9 @@ export const getters = {
   outgoingOffers (state, getters) {
     const address = getters.address
     return state.offers.filter(o => +o.status === 0 && o.side0.toLowerCase() === address)
+  },
+  pendingOffers (state) {
+    return state.offers.filter(o => +o.status === 0)
   },
   chain (state) {
     return _.get(state, 'network.chain')
