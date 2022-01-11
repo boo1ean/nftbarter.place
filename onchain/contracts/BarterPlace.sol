@@ -10,8 +10,8 @@ contract BarterPlace is Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _offerIdCounter;
     
-    uint256 private _offerCreateFee;
-    uint256 private _offerAcceptFee;
+    uint256 private _createOfferFee;
+    uint256 private _acceptOfferFee;
     
     enum OfferStatus {
         Pending,
@@ -56,19 +56,19 @@ contract BarterPlace is Ownable {
     } 
     
     function setCreateOfferFee (uint256 newOfferFee) public onlyOwner {
-        _offerCreateFee = newOfferFee;
+        _createOfferFee = newOfferFee;
     }
     
-    function offerCreateFee () public view returns (uint256) {
-        return _offerCreateFee;
+    function createOfferFee () public view returns (uint256) {
+        return _createOfferFee;
     }
     
     function setAcceptOfferFee (uint256 newOfferFee) public onlyOwner {
-        _offerAcceptFee = newOfferFee;
+        _acceptOfferFee = newOfferFee;
     }
 
-    function offerAcceptFee () public view returns (uint256) {
-        return _offerAcceptFee;
+    function acceptOfferFee () public view returns (uint256) {
+        return _acceptOfferFee;
     }
 
     function withdrawBalance (address payable to) public onlyOwner {
@@ -84,7 +84,7 @@ contract BarterPlace is Ownable {
         BarterAsset[] calldata side1Assets) payable public {
         address side0 = msg.sender;
 
-        require(msg.value >= _offerCreateFee, "Invalid create offer fee amount");
+        require(msg.value >= _createOfferFee, "Invalid create offer fee amount");
     
         uint256 offerId = _offerIdCounter.current();
         
@@ -114,7 +114,7 @@ contract BarterPlace is Ownable {
         require(offer.side1 == msg.sender, 'Sender is not offer participant');
         require(offer.status == OfferStatus.Pending, 'Offer status is not pending (canceled or fulfilled)');
 
-        require(msg.value >= _offerAcceptFee, "Invalid accept offer fee amount");
+        require(msg.value >= _acceptOfferFee, "Invalid accept offer fee amount");
         
 /*
         _verifyOwnership(offer.side0, offer.side0Assets);

@@ -232,7 +232,7 @@ export default {
           this.loadingText = 'Waiting for offer creation transaction to complete'
           const barterContract = await contracts.createBarterContract()
           const options = {
-            value: await barterContract.methods.offerFee().call(),
+            value: await barterContract.methods.createOfferFee().call(),
             from: this.pendingOffer.side0,
           }
           try {

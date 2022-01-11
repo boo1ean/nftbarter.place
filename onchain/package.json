@@ -14,5 +14,8 @@
   },
   "dependencies": {
     "chokidar": "^3.5.2"
+  },
+  "scripts": {
+    "deploy-ropsten": "npx hardhat run --network ropsten scripts/deploy-prod.js"
   }
 }

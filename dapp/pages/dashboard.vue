@@ -23,17 +23,31 @@ v-container(fluid)
               td.pl-4 {{ totalOffers }}
             tr
               td
-                b Offer Fee
+                b Create Offer Fee
               td.pl-4.py-1
                 v-text-field(
                   dense
                   hide-details
-                  v-model="offerFee"
+                  v-model="createOfferFee"
                   solo
                 )
               td.pl-4
                 v-btn(
-                  @click="setFee"
+                  @click="setCreateOfferFee"
+                ) Set fee
+            tr
+              td
+                b Accept Offer Fee
+              td.pl-4.py-1
+                v-text-field(
+                  dense
+                  hide-details
+                  v-model="acceptOfferFee"
+                  solo
+                )
+              td.pl-4
+                v-btn(
+                  @click="setAcceptOfferFee"
                 ) Set fee
         v-card-actions
   ProgressIndicator(v-if="isLoading").mt-10
@@ -59,7 +73,8 @@ export default {
     return {
       recentOfferId: -1,
       contractBalanceWei: 0,
-      offerFee: 0,
+      createOfferFee: 0,
+      acceptOfferFee: 0,
       isLoading: false,
     }
   },
@@ -96,15 +111,31 @@ export default {
       const barterContract = await contracts.createBarterContract()
       this.recentOfferId = +(await barterContract.methods.getRecentOfferId().call())
       this.contractBalanceWei = await web3.eth.getBalance(barterContract.options.address)
-      this.offerFee = Moralis.Units.FromWei(await barterContract.methods.offerFee().call())
+      this.createOfferFee = Moralis.Units.FromWei(await barterContract.methods.createOfferFee().call())
+      this.acceptOfferFee = Moralis.Units.FromWei(await barterContract.methods.acceptOfferFee().call())
     },
-    async setFee () {
+    async setCreateOfferFee () {
       this.isLoading = true
-      const offerFeeWei = Moralis.Units.ETH(this.offerFee)
+      const offerFeeWei = Moralis.Units.ETH(this.createOfferFee)
       const barterContract = await contracts.createBarterContract()
       try {
         const owner = await barterContract.methods.owner().call()
-        await barterContract.methods.setOfferFee(offerFeeWei).send({
+        await barterContract.methods.setCreateOfferFee(offerFeeWei).send({
+          from: owner,
+        })
+        this.sync()
+      } catch (e) {
+        console.error('Set fee error', e)
+      }
+      this.isLoading = false
+    },
+    async setAcceptOfferFee () {
+      this.isLoading = true
+      const offerFeeWei = Moralis.Units.ETH(this.acceptOfferFee)
+      const barterContract = await contracts.createBarterContract()
+      try {
+        const owner = await barterContract.methods.owner().call()
+        await barterContract.methods.setAcceptOfferFee(offerFeeWei).send({
           from: owner,
         })
         this.sync()

@@ -197,7 +197,7 @@ describe("Bartering", () => {
 			expect(e).to.be.ok
 		}
 		
-		const offerFeeFromContract = await barterContract.offerCreateFee()
+		const offerFeeFromContract = await barterContract.createOfferFee()
 		expect(offerFeeFromContract).to.be.eq(offerFee)
 
 		const result = await (await barterContract.createOffer(
@@ -223,7 +223,7 @@ describe("Bartering", () => {
 		expect(balanceAfter).to.be.eq(balanceBefore.add(offerFee * 2))
 
 		await (await barterContract.setAcceptOfferFee(offerFee)).wait()
-		const offerAcceptFee = await barterContract.offerAcceptFee()
+		const offerAcceptFee = await barterContract.acceptOfferFee()
 		expect(offerAcceptFee).to.be.eq(offerFee)
 
 		const offerId = result.events[0].args.offerId

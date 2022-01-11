@@ -134,9 +134,11 @@ export default {
         this.isLoading = true
         this.loadingText = 'Waiting for accept transaction'
         const barterContract = await contracts.createBarterContract(this.requestedChain)
-        await barterContract.methods.acceptOffer(this.offer.id).send({
+        const options = {
           from: this.currentUserAddress,
-        })
+          value: await barterContract.methods.acceptOfferFee().call(),
+        }
+        await barterContract.methods.acceptOffer(this.offer.id).send(options)
         this.$store.dispatch('account/sync')
         await this.fetchOffer()
       } catch (e) {

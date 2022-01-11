@@ -83,10 +83,11 @@ v-app
     v-card.flex(flat tile)
       v-card-text.py-2.text-center.d-flex.align-center.justify-center
         | {{ new Date().getFullYear() }} &mdash;&nbsp;
-        span nftbarter.place |&nbsp;
-        a(href="https://moralis.io/" target="_blank").text-decoration-none.mr-3 Built with Moralis
+        span nftbarter.place
+        //span &nbsp|&nbsp;
+        //a(href="https://moralis.io/" target="_blank").text-decoration-none Built with Moralis
         a(icon link href="https://twitter.com/nftbarterplace" target="_blank")
-          fa-icon(icon="fab fa-twitter").svg-icon.mr-2
+          fa-icon(icon="fab fa-twitter").svg-icon.mr-2.ml-3
         a(icon link href="https://t.me/nftbarterplace" target="_blank")
           fa-icon(icon="fab fa-telegram").svg-icon
 </template>
