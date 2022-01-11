@@ -108,19 +108,19 @@ export default {
     return {
       drawerItems: [
         {
-          title: 'Create Barter Offer',
+          title: 'Start Barter',
           icon: 'mdi-repeat',
           to: '/',
         },
         {
-          title: 'Outgoing Offers',
-          icon: 'mdi-redo',
-          to: '/offers/outgoing',
+          title: 'My Offers',
+          icon: 'mdi-view-list',
+          to: '/offers',
         },
         {
-          title: 'Incoming Offers',
-          icon: 'mdi-undo',
-          to: '/offers/incoming',
+          title: 'FAQ',
+          icon: 'mdi-help-circle',
+          to: '/faq',
         },
       ],
       drawer: false,
