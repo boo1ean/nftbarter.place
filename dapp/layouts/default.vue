@@ -14,16 +14,18 @@ v-app
     clipped-left
     elevation="1"
   )
-    v-toolbar-title(class="ml-0")
-      v-app-bar-nav-icon(v-if="address" @click.stop="drawer = !drawer")
-      span nftbarter.place
+    img(
+      src="~/assets/logo-color.png"
+      height=40
+      width=40
+      @click.stop="toggleDrawer"
+    ).mr-4
+    v-toolbar-items.d-none.d-md-flex
+      v-btn-toggle(borderless group dense).align-center
+        v-btn(v-for="(item, i) in drawerItems" :key="i" :to="item.to" router nuxt)
+          v-icon.mr-2 {{ item.icon }}
+          | {{ item.title }}
     v-spacer
-    //v-btn(
-    //  icon
-    //  @click="refresh"
-    //  v-if="address"
-    //)
-    //  v-icon mdi-refresh
     .network.mx-2
       v-select(
         v-if="address"
@@ -85,6 +87,16 @@ v-app
               span Dashboard
   v-main
     nuxt
+  v-footer(padless)
+    v-card.flex(flat tile)
+      v-card-text.py-2.text-center.d-flex.align-center.justify-center
+        | {{ new Date().getFullYear() }} &mdash;&nbsp;
+        span nftbarter.place |&nbsp;
+        a(href="https://moralis.io/" target="_blank").text-decoration-none.mr-3 Built with Moralis
+        a(icon link href="https://twitter.com/nftbarterplace" target="_blank")
+          fa-icon(icon="fab fa-twitter").svg-icon.mr-2
+        a(icon link href="https://t.me/nftbarterplace" target="_blank")
+          fa-icon(icon="fab fa-telegram").svg-icon
 </template>
 
 <script>
@@ -94,7 +106,24 @@ export default {
   name: 'LayoutDefault',
   data () {
     return {
-      drawer: true,
+      drawerItems: [
+        {
+          title: 'Create Barter Offer',
+          icon: 'mdi-repeat',
+          to: '/',
+        },
+        {
+          title: 'Outgoing Offers',
+          icon: 'mdi-redo',
+          to: '/offers/outgoing',
+        },
+        {
+          title: 'Incoming Offers',
+          icon: 'mdi-undo',
+          to: '/offers/incoming',
+        },
+      ],
+      drawer: false,
       selectedNetwork: null,
       isNetworkLoading: true,
     }
@@ -178,6 +207,11 @@ export default {
     connectWallet () {
       this.$store.dispatch('account/login')
     },
+    toggleDrawer () {
+      if (this.address) {
+        this.drawer = !this.drawer
+      }
+    },
   },
 }
 </script>
@@ -188,5 +222,9 @@ export default {
 }
 .network {
   width: 200px
+}
+.svg-icon {
+  height: 1.3rem;
+  color: grey;
 }
 </style>

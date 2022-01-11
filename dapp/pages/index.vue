@@ -1,5 +1,5 @@
 <template lang="pug">
-v-container(fluid)
+v-container
   v-sheet(
     v-if="!isWalletConnected"
     elevation=1
@@ -19,7 +19,7 @@ v-container(fluid)
       span.black-text {{ loadingText }}
       ProgressIndicator.my-4
   OfferDigest(v-if="pendingOffer" :offer="pendingOffer")
-  v-row(v-show="offerState === 0")
+  v-row(v-show="offerState === 0").flex-grow-0
     v-col(sm=12 lg=6)
       BarterSide(
         label="Your offer"
@@ -33,7 +33,7 @@ v-container(fluid)
         @confirm="confirmSide1"
         @dirty="makeSide1Dirty"
       )
-  v-row.mt-lg-10
+  v-row.flex-grow-0.my-10.pb-10
     v-col(
       lg=6 offset-lg=3
       sm=12
@@ -75,6 +75,9 @@ v-container(fluid)
 .black-text {
   color: black !important;
 }
+.height-100 {
+  height: 100%;
+}
 </style>
 
 <script>
@@ -103,6 +106,13 @@ const ContinueTexts = {
   [OfferState.Creating]: 'Create offer',
 }
 
+const PageTitles = {
+  [OfferState.Initial]: 'Create Offer',
+  [OfferState.Preview]: 'Create Offer | Preview',
+  [OfferState.Approvals]: 'Create Offer | Approvals',
+  [OfferState.Creating]: 'Create Offer | Almost Completed',
+}
+
 const Instructions = {
   [OfferState.Initial]: 'Specify counterparty address and select assets for each side',
   [OfferState.Preview]: 'Make sure everything is correct and proceed to approvals',
@@ -115,6 +125,11 @@ export default {
   components: {
     NFTMetadata,
     BarterSide,
+  },
+  head () {
+    return {
+      title: this.pageTitle,
+    }
   },
   filters: {
     tokenIdShort (tokenId) {
@@ -145,6 +160,12 @@ export default {
     },
     stepInstruction () {
       return Instructions[this.offerState]
+    },
+    pageTitle () {
+      if (!this.isWalletConnected) {
+        return 'Connect Your Wallet'
+      }
+      return PageTitles[this.offerState]
     },
   },
   methods: {

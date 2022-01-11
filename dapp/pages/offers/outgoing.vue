@@ -13,6 +13,11 @@ import OfferListItem from '@/components/OfferListItem'
 export default {
   name: 'OutgoingOffers',
   middleware: 'auth',
+  head () {
+    return {
+      title: 'Outgoing Offers',
+    }
+  },
   components: {
     OfferListItem,
   },

@@ -29,6 +29,11 @@ export default {
   components: {
     ProgressIndicator,
   },
+  head () {
+    return {
+      title: this.offer ? `Offer #${this.offer.id}` : 'Loading Offer..',
+    }
+  },
   data () {
     return {
       offer: null,

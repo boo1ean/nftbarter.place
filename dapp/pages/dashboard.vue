@@ -50,6 +50,11 @@ export default {
     ContractLink,
     ProgressIndicator,
   },
+  head () {
+    return {
+      title: 'Owner Dashboard',
+    }
+  },
   data () {
     return {
       recentOfferId: -1,
