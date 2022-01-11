@@ -22,7 +22,7 @@ v-app
     img(v-else-if="'ropsten' === network.chain" src="~/assets/logo-ropsten.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
     v-toolbar-items.d-none.d-md-flex
       v-btn-toggle(borderless group dense).align-center
-        v-btn(v-for="(item, i) in drawerItems" :key="i" :to="item.to" router nuxt)
+        v-btn(v-for="(item, i) in drawerItems" v-if="!item.auth || item.auth && account.address" :key="i" :to="item.to" router nuxt)
           v-icon.mr-2 {{ item.icon }}
           | {{ item.title }}
           v-badge(
@@ -56,10 +56,10 @@ v-app
       target="_blank"
       :href="`${network.explorerURL}/address/${address}`"
     ) {{ address | addressShort }}
-  v-navigation-drawer(v-if="address" v-model="drawer" app clipped)
+  v-navigation-drawer(v-model="drawer" app clipped)
     div.d-flex.flex-column.justify-space-between.nav-wrapper
       v-list
-        v-list-item(v-for="(item, i) in drawerItems" :key="i" :to="item.to" router exact)
+        v-list-item(v-for="(item, i) in drawerItems" v-if="!item.auth || item.auth && account.address" :key="i" :to="item.to" router exact)
           v-list-item-action
             v-icon {{ item.icon }}
           v-list-item-content
@@ -110,6 +110,7 @@ export default {
           icon: 'mdi-view-list',
           to: '/offers',
           offers: true,
+          auth: true,
         },
         {
           title: 'FAQ',
@@ -202,9 +203,7 @@ export default {
       this.$store.dispatch('account/login')
     },
     toggleDrawer () {
-      if (this.address) {
-        this.drawer = !this.drawer
-      }
+      this.drawer = !this.drawer
     },
   },
 }
