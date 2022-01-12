@@ -86,7 +86,7 @@ export default {
       return this.recentOfferId + 1
     },
     contractAddress () {
-      return contracts.addresses().barter
+      return this.$store.getters['account/barterContractAddress']
     },
     contractBalance () {
       return Moralis.Units.FromWei(this.contractBalanceWei)

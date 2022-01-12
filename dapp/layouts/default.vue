@@ -14,15 +14,15 @@ v-app
     clipped-left
     elevation="1"
   )
-    img(v-if="!account.address" src="~/assets/logo-color.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
-    img(v-else-if="'bsc' === network.chain" src="~/assets/logo-bsc.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
-    img(v-else-if="'polygon' === network.chain" src="~/assets/logo-polygon.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
-    img(v-else-if="'eth' === network.chain" src="~/assets/logo-eth.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
-    img(v-else-if="'avalanche' === network.chain" src="~/assets/logo-avax.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
-    img(v-else-if="'ropsten' === network.chain" src="~/assets/logo-ropsten.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
+    img(v-if="isNetwork('bsc')" src="~/assets/logo-bsc.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
+    img(v-else-if="isNetwork('polygon')" src="~/assets/logo-polygon.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
+    img(v-else-if="isNetwork('eth')" src="~/assets/logo-eth.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
+    img(v-else-if="isNetwork('avalanche')" src="~/assets/logo-avax.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
+    img(v-else-if="isNetwork('ropsten')" src="~/assets/logo-ropsten.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
+    img(v-else src="~/assets/logo-color.png" height=40 width=40 @click.stop="toggleDrawer").mr-4
     v-toolbar-items.d-none.d-md-flex
       v-btn-toggle(borderless group dense).align-center
-        v-btn(v-for="(item, i) in drawerItems" v-if="!item.auth || item.auth && account.address" :key="i" :to="item.to" router nuxt)
+        v-btn(v-for="(item, i) in drawerItems" v-if="!item.auth || item.auth && isReadyToRumble" :key="i" :to="item.to" router nuxt)
           v-icon.mr-2 {{ item.icon }}
           | {{ item.title }}
           v-badge(
@@ -49,9 +49,9 @@ v-app
       )
     v-btn(v-if="!account.address" text @click.stop="connectWallet") Connect with metamask
     v-btn(
-      v-else
+      v-else-if="network"
       :color="networkColor"
-      :class="{ 'white--text': network.chain !== 'bsc' }"
+      :class="{ 'white--text': !isNetwork('bsc') }"
       link
       target="_blank"
       :href="`${network.explorerURL}/address/${address}`"
@@ -59,7 +59,7 @@ v-app
   v-navigation-drawer(v-model="drawer" app clipped)
     div.d-flex.flex-column.justify-space-between.nav-wrapper
       v-list
-        v-list-item(v-for="(item, i) in drawerItems" v-if="!item.auth || item.auth && account.address" :key="i" :to="item.to" router exact)
+        v-list-item(v-for="(item, i) in drawerItems" v-if="!item.auth || item.auth && isReadyToRumble" :key="i" :to="item.to" router exact)
           v-list-item-action
             v-icon {{ item.icon }}
           v-list-item-content
@@ -134,14 +134,6 @@ export default {
       this.isNetworkLoading = false
     },
   },
-  // watch: {
-  //   selectedNetwork (oldVal, newVal) {
-  //     console.log('Watching you boi', oldVal.chainId, newVal.chainId)
-  //     if (oldVal.chainId !== newVal.chainId) {
-  //       this.selectedNetwork = { chainId: 56 }
-  //     }
-  //   }
-  // },
   mounted () {
     this.$store.dispatch('account/sync')
 
@@ -160,7 +152,7 @@ export default {
   },
   computed: {
     ...mapState(['notifications', 'account']),
-    ...mapGetters('account', ['address', 'pendingOffers']),
+    ...mapGetters('account', ['address', 'pendingOffers', 'isReadyToRumble']),
     network: {
       get () {
         return this.selectedNetwork
@@ -204,6 +196,12 @@ export default {
     },
     toggleDrawer () {
       this.drawer = !this.drawer
+    },
+    isNetwork (name) {
+      if (!this.network) {
+        return false
+      }
+      return this.network.chain === name
     },
   },
 }

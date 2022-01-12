@@ -8,6 +8,8 @@ v-container
       v-expansion-panel-content(v-html="item.a").px-6.pb-6
 </template>
 <script>
+import contractsConfig from '../contracts-config.json'
+import { networks } from '@/utils/networks'
 export default {
   name: 'FAQPage',
   head () {
@@ -47,25 +49,30 @@ export default {
         `,
         },
         {
+          q: 'Is XXX blockchain supported?',
+          a: `
+          <div>
+            Currently supported chains:<br />
+            <ul>
+              ${networks.map(n => `<li>${n.name}</li>`).join('')}
+            </ul>
+          </div>
+        `,
+        },
+        {
           q: 'Contracts addresses',
           a: `
           <table>
+            ${networks.map(n => `
             <tr>
-                <td><b>BSC</b></td>
-                <td class="pl-4">0x17eCd4fdD03b5E97F249789d30C5D283b9c232df</td>
+                <td><b>${n.name}</b></td>
+                <td class="pl-4">
+                    <a href="${n.explorerURL}/address/${contractsConfig.BarterPlace[n.chain]}" target="_blank">
+                      ${contractsConfig.BarterPlace[n.chain]}
+                    </a>
+                </td>
             </tr>
-            <tr>
-                <td><b>Polygon</b></td>
-                <td class="pl-4">0x17eCd4fdD03b5E97F249789d30C5D283b9c232df</td>
-            </tr>
-            <tr>
-                <td><b>Avalanche</b></td>
-                <td class="pl-4">0x17eCd4fdD03b5E97F249789d30C5D283b9c232df</td>
-            </tr>
-            <tr>
-                <td><b>Ropsten</b></td>
-                <td class="pl-4">0x17eCd4fdD03b5E97F249789d30C5D283b9c232df</td>
-            </tr>
+            `).join('')}
           </table>
           `,
         },

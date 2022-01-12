@@ -14,6 +14,13 @@ v-container
       x-large
       @click.stop="connectWallet"
     ).mt-3 CONNECT WITH METAMASK
+  v-alert(
+    v-else-if="!isReadyToRumble"
+    elevation=1
+    color="red"
+  ).py-6.mb-4.d-flex.justify-center.align-center.flex-column.hello
+    div
+      span.hello This chain is not supported (yet)
   v-overlay(:value="isLoading")
     v-alert(color="white")
       span.black-text {{ loadingText }}
@@ -81,6 +88,7 @@ v-container
 </style>
 
 <script>
+import _ from 'lodash'
 import { mapState, mapActions, mapGetters } from 'vuex'
 import Moralis from 'moralis'
 import NFTMetadata from '../components/NFTMetadata'
@@ -145,7 +153,7 @@ export default {
   },
   computed: {
     ...mapState(['account']),
-    ...mapGetters('account', ['address']),
+    ...mapGetters('account', ['address', 'isReadyToRumble']),
     offerNfts () {
       return this.account.nfts
     },
@@ -154,6 +162,9 @@ export default {
     },
     isWalletConnected () {
       return this.address
+    },
+    isNetworkSupported () {
+      return this.address && this.account.network
     },
     stepInstruction () {
       return Instructions[this.offerState]
@@ -182,7 +193,7 @@ export default {
         case (OfferState.Approvals):
         case (OfferState.Preview): {
           this.offerState = OfferState.Approvals
-          const barterContractAddress = await contracts.addresses().barter
+          const barterContractAddress = this.$store.getters['account/barterContractAddress']
           let didGetAllApprovals = true
           const usedNftAddresses = {}
           for (const asset of this.pendingOffer.side0Assets) {
@@ -223,7 +234,7 @@ export default {
           } else {
             alert('Sorry, there are some issues with your approvals, please try again')
           }
-          this.pendingOffer = { ...this.pendingOffer }
+          this.pendingOffer = _.cloneDeep(this.pendingOffer)
           this.isLoading = false
           break
         }
@@ -239,10 +250,14 @@ export default {
             const result = await barterContract.methods
               .createOffer(
                 this.pendingOffer.side1,
-                this.pendingOffer.side0Assets,
-                this.pendingOffer.side1Assets,
+                this.pendingOffer.side0Assets.map(amountToString),
+                this.pendingOffer.side1Assets.map(amountToString),
               )
               .send(options)
+            function amountToString (a) {
+              a.amount = '0x' + a.amount.toString(16)
+              return a
+            }
             const offerId = result.events.OfferCreated.returnValues.offerId
             this.isLoading = false
             this.$router.push(`/offers/${offerId}?chain=${this.account.network.chain}`)
@@ -297,7 +312,7 @@ export default {
         return 0
       }
       function getERC20Amount (erc20) {
-        return Moralis.Units.Token(erc20.amount, erc20.decimals).toString()
+        return Moralis.Units.Token(erc20.amount, erc20.decimals)
       }
     },
     confirmSide0 (side0) {

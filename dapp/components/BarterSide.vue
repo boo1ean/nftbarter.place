@@ -129,7 +129,7 @@ v-card(elevation=1)
         v-btn(
           color="success"
           block
-          :disabled="confirmed || !dynamicAddress || isAddressInvalid"
+          :disabled="!isConfirmButtonEnabled"
           @click="confirm") {{ confirmed ? 'Confirmed' : hasItems ? 'Confirm assets' : 'Confirm without assets' }}
 </template>
 <script>
@@ -213,10 +213,13 @@ export default {
       return this.selectedItems.length || this.erc20Assets.length
     },
     hasValidAddress () {
-      return this.dynamicAddress && !this.isAddressInvalid
+      return this.dynamicAddress && !this.isAddressInvalid && this.$store.getters['account/isReadyToRumble']
     },
     isWalletConnected () {
       return this.$store.getters['account/address']
+    },
+    isConfirmButtonEnabled () {
+      return this.$store.getters['account/isReadyToRumble'] && !(this.confirmed || !this.dynamicAddress || this.isAddressInvalid)
     },
   },
   watch: {

@@ -1,69 +1,8 @@
 import _ from 'lodash'
+import contractsConfigs from '../contracts-config.json'
 import Moralis from '../utils/moralis'
 import contracts from '@/utils/contracts'
-
-const networks = [
-  {
-    name: 'BSC',
-    chainId: 56,
-    explorerURL: 'https://bscscan.com',
-    chain: 'bsc',
-    color: '#F0B90B',
-    details: {
-      chainId: 56,
-      chainName: 'Binance Smart Chain',
-      currencyName: 'BNB',
-      currencySymbol: 'BNB',
-      rpcUrl: 'https://bsc-dataseed1.ninicoin.io',
-      blockExplorerUrl: 'https://bscscan.com/',
-    },
-  },
-  {
-    name: 'Avalanche',
-    chainId: 43114,
-    explorerURL: 'https://snowtrace.io',
-    chain: 'avalanche',
-    color: '#e84142',
-    details: {
-      chainId: 43114,
-      chainName: 'Avalanche',
-      currencyName: 'AVAX',
-      currencySymbol: 'AVAX',
-      rpcUrl: 'https://api.avax.network/ext/bc/C/rpc',
-      blockExplorerUrl: 'https://cchain.explorer.avax.network/',
-    },
-  },
-  {
-    name: 'Polygon',
-    chainId: 137,
-    explorerURL: 'https://polygonscan.com',
-    chain: 'polygon',
-    color: '#8247e5',
-    details: {
-      chainId: 137,
-      chainName: 'Polygon',
-      currencyName: 'MATIC',
-      currencySymbol: 'MATIC',
-      rpcUrl: 'https://polygon-rpc.com',
-      blockExplorerUrl: 'https://polygonscan.com/',
-    },
-  },
-  {
-    name: 'Ropsten Test Network',
-    chainId: 3,
-    explorerURL: 'https://ropsten.etherscan.io',
-    chain: 'ropsten',
-    color: '#ff4a8d',
-    details: {
-      chainId: 3,
-      chainName: 'Ropsten Test Network',
-      currencyName: 'ETH',
-      currencySymbol: 'ETH',
-      rpcUrl: 'https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-      blockExplorerUrl: 'https://ropsten.etherscan.io',
-    },
-  },
-]
+import { networks } from '@/utils/networks'
 
 // await Moralis.addNetwork(
 //     chainId,
@@ -78,10 +17,13 @@ const initialState = {
   isLoading: false,
   nfts: [],
   offers: [],
-  networks,
+  networks: [...networks],
   network: null,
   address: null,
   isOwner: false,
+  contractsAddresses: {
+    barter: null,
+  },
 }
 
 export const state = () => ({ ...initialState })
@@ -100,9 +42,9 @@ export const mutations = {
     state.network = network
   },
   setupAccount (state, { address, chainId }) {
-    console.log('account.mutations.setAccount', { address, chainId })
     state.address = address
     state.network = _.find(networks, { chainId })
+    state.contractsAddresses.barter = contractsConfigs.BarterPlace[state.network.chain]
   },
   setOwner (state, value) {
     state.isOwner = value
@@ -129,6 +71,12 @@ export const getters = {
   },
   networkColor (state) {
     return _.get(state, 'network.color', 'black')
+  },
+  isReadyToRumble (state, getters) {
+    return state.address && state.network && getters.barterContractAddress
+  },
+  barterContractAddress (state) {
+    return state.contractsAddresses.barter
   },
 }
 
@@ -171,6 +119,7 @@ export const actions = {
     commit('setNetwork', network)
   },
   async sync ({ commit, dispatch }) {
+    console.log('account/sync')
     const isConnected = _.get(window, 'web3.currentProvider.selectedAddress', false)
     if (isConnected) {
       const web3 = await Moralis.enableWeb3()
@@ -178,9 +127,13 @@ export const actions = {
       const chainId = await Moralis.getChainId()
       commit('setupAccount', { address, chainId })
       dispatch('fetchAccountOffers')
-      const barterContract = await contracts.createBarterContract()
-      const owner = await barterContract.methods.owner().call()
-      commit('setOwner', owner.toLowerCase() === address.toLowerCase())
+      try {
+        const barterContract = await contracts.createBarterContract()
+        const owner = await barterContract.methods.owner().call()
+        commit('setOwner', owner.toLowerCase() === address.toLowerCase())
+      } catch (e) {
+        console.error('Contract interaction failed')
+      }
     }
   },
   async ensureChain ({ commit }, chain) {

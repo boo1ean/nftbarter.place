@@ -133,7 +133,7 @@ export default {
       try {
         this.isLoading = true
         this.loadingText = 'Waiting for accept transaction'
-        const barterContract = await contracts.createBarterContract(this.requestedChain)
+        const barterContract = await contracts.createBarterContract()
         const options = {
           from: this.currentUserAddress,
           value: await barterContract.methods.acceptOfferFee().call(),
@@ -147,7 +147,7 @@ export default {
       this.isLoading = false
     },
     async approvePermissionsAndAccept () {
-      const barterContractAddress = await contracts.addresses().barter
+      const barterContractAddress = this.$store.getters['account/barterContractAddress']
       let didGetAllApprovals = true
       const usedNftAddresses = {}
       for (const asset of this.offer.side1Assets) {
@@ -190,9 +190,9 @@ export default {
         this.acceptOffer()
       } else {
         this.isLoading = false
+        this.fetchOffer()
         alert('Sorry, there are some issues with your approvals, please try again')
       }
-      this.offer = { ...this.offer }
     },
   },
 }
