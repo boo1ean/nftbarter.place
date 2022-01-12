@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const hre = require("hardhat")
 const fs = require("fs")
+const existingConfig = require('../../dapp/contracts-config.json')
 
 class Ref {
     constructor (path) {
@@ -48,15 +49,19 @@ function resolveConstructorArguments (config) {
 }
 
 function generateFrontendConfig () {
-    const frontendConfig = {}
     for (const contractName in deployedContracts) {
-        frontendConfig[contractName] = {
-            address: deployedContracts[contractName].address,
-            abi: artifacts.readArtifactSync(contractName).abi,
+        if (existingConfig[contractName]) {
+            existingConfig[contractName][hre.network.name] = deployedContracts[contractName].address
+            existingConfig[contractName].abi = artifacts.readArtifactSync(contractName).abi
+        } else {
+            existingConfig[contractName] = {
+                [hre.network.name]: deployedContracts[contractName].address,
+                abi: artifacts.readArtifactSync(contractName).abi,
+            }
         }
     }
 
-    fs.writeFileSync(__dirname + "/../../dapp/contracts-config.json", JSON.stringify(frontendConfig))
+    fs.writeFileSync(__dirname + "/../../dapp/contracts-config.json", JSON.stringify(existingConfig))
 }
 
 // We recommend this pattern to be able to use async/await everywhere
