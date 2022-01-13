@@ -47,22 +47,34 @@ v-container
     )
       v-card
         v-card-title Creating barter offer
-        v-card-subtitle
+        v-card-subtitle.pb-0
           div {{ stepInstruction }}
           div(v-if="createOfferFee").text--secondary Service fee: {{ createOfferFee }}
-        v-card-text
+        v-card-text.pb-0
+          .d-flex.mb-2
+            v-checkbox(
+              label="Has deadline"
+              hide-details
+            ).mt-1
+            v-text-field(
+              type="number"
+              label="Days"
+              hide-details
+              solo
+              dense
+            ).flex-grow-0.ml-4
           v-stepper(
             elevation=0
             v-model="offerState"
           )
             v-stepper-header
-              v-stepper-step(:complete='offerState > 0' step='0') Select Assets
+              v-stepper-step(:complete='offerState > 0' step='0').pl-0 Select Assets
               v-divider
               v-stepper-step(:complete='offerState > 1' step='1') Preview
               v-divider
               v-stepper-step(:complete='offerState > 2' step='2') Approve permissions
               v-divider
-              v-stepper-step(step='3') Create offer
+              v-stepper-step(step='3').pr-0 Create offer
         v-card-actions.d-flex
           v-btn(
             v-if="offerState > 0"
