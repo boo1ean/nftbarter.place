@@ -1,7 +1,6 @@
 const { expect } = require("chai")
 const { ethers } = require("hardhat")
 
-
 describe("Bartering", () => {
     let NFT1Contract
 	let NFT2Contract
@@ -41,7 +40,47 @@ describe("Bartering", () => {
 		signers = await ethers.getSigners()
 		owner = signers[0]
 	})
-	
+    
+	it('Offer deadline', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
+		const side1Assets = await mintNFT(NFT1Contract, side1.address, 2)
+		await approveNFTS(side0, barterContract.address, NFT1Contract)
+		await approveNFTS(side1, barterContract.address, NFT1Contract)
+
+		const currentTimestamp = Math.round(new Date().getTime() / 1000)
+		const deadline0 = currentTimestamp - 1
+		const result = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets,
+			deadline0,
+		)).wait()
+
+		const offerId = result.events[0].args.offerId
+		try {
+			await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+			expect(false).to.be.true
+		} catch (e) {
+			expect(e.message.indexOf('Offer expired') !== -1).to.be.true
+		}
+		
+		// assuming this test can be completed in a minute
+		const deadline1 = currentTimestamp + 60
+		const result1 = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets,
+			deadline1,
+		)).wait()
+        
+		const offerId1 = result1.events[0].args.offerId
+		await (await barterContract.connect(side1).acceptOffer(offerId1)).wait()
+		expect(await NFT1Contract.ownerOf(side0Assets[0].tokenId)).to.be.eq(side1.address)
+	})
+
 	it('Get recent offer id', async () => {
 		let side0 = signers[0]
 		let side1 = signers[1]
@@ -53,7 +92,8 @@ describe("Bartering", () => {
 		await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets
+			side1Assets,
+			0,
 		)).wait()
         
 		const recentOfferId0 = await barterContract.getRecentOfferId()
@@ -62,7 +102,7 @@ describe("Bartering", () => {
 		await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets
+			side1Assets, 0
 		)).wait()
 		const recentOfferId1 = await barterContract.getRecentOfferId()
 		expect(recentOfferId1).to.be.eq(1)
@@ -70,7 +110,7 @@ describe("Bartering", () => {
 		await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets
+			side1Assets, 0
 		)).wait()
 		const recentOfferId2 = await barterContract.getRecentOfferId()
 		expect(recentOfferId2).to.be.eq(2)
@@ -93,7 +133,7 @@ describe("Bartering", () => {
 		await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets
+			side1Assets, 0
 		)).wait()
 
 		const side0Assets3 = await mintNFT(NFT1Contract, side0.address, 4)
@@ -102,7 +142,7 @@ describe("Bartering", () => {
 		await (await barterContract.createOffer(
 			side2.address,
 			side0Assets3,
-			side2Assets,
+			side2Assets, 0
 		)).wait()
 
 		const side0Assets2 = side0Assets.slice(0, -1)
@@ -110,7 +150,7 @@ describe("Bartering", () => {
 		await (await barterContract.createOffer(
 			side1.address,
 			side0Assets2,
-			side1Assets2
+			side1Assets2, 0
 		)).wait()
 
 		
@@ -153,7 +193,7 @@ describe("Bartering", () => {
 		const result = await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets
+			side1Assets, 0
 		)).wait()
 
         expect(result.events.length).to.be.equal(1)
@@ -190,9 +230,9 @@ describe("Bartering", () => {
 			await (await barterContract.createOffer(
 				side1.address,
 				side0Assets,
-				side1Assets
+				side1Assets, 0
 			)).wait()
-			expect(true).to.be.false
+			expect(false).to.be.true
 		} catch (e) {
 			expect(e).to.be.ok
 		}
@@ -203,14 +243,14 @@ describe("Bartering", () => {
 		const result = await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets, { value: offerFee }
+			side1Assets, 0, { value: offerFee }
 		)).wait()
 		expect(result).to.be.ok
         
 		const result2 = await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets, { value: offerFee }
+			side1Assets, 0, { value: offerFee }
 		)).wait()
 		expect(result2).to.be.ok
         
@@ -229,7 +269,7 @@ describe("Bartering", () => {
 		const offerId = result.events[0].args.offerId
 		try {
 			await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
-			expect(true).to.be.false
+			expect(false).to.be.true
 		} catch (e) {
 			expect(e.message.indexOf('Invalid accept offer fee amount') !== -1).to.be.true
 		}
@@ -255,7 +295,7 @@ describe("Bartering", () => {
 		const results = await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets
+			side1Assets, 0
 		)).wait()
 
 		const offerId = results.events[0].args.offerId
@@ -271,6 +311,156 @@ describe("Bartering", () => {
 		}
 	})
 
+	it('Open offer (side1 = 0x0)', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+		let side2 = signers[2]
+
+		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
+		const side1Assets = await mintNFT(NFT1Contract, side1.address, 2)
+		await approveNFTS(side0, barterContract.address, NFT1Contract)
+		await approveNFTS(side1, barterContract.address, NFT1Contract)
+
+		const results = await (await barterContract.createOffer(
+			ethers.constants.AddressZero,
+			side0Assets,
+			side1Assets, 0
+		)).wait()
+
+		const offerId = results.events[0].args.offerId
+		const acceptResults = await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+
+		expect(acceptResults.events.length).be.eq(9)
+
+		for (const asset of side0Assets) {
+			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side1.address)
+		}
+		for (const asset of side1Assets) {
+			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side0.address)
+		}
+
+		const results1 = await (await barterContract.createOffer(
+			ethers.constants.AddressZero,
+			side1Assets,
+			[], 0
+		)).wait()
+		const offerId1 = results1.events[0].args.offerId
+		await (await barterContract.connect(side2).acceptOffer(offerId1)).wait()
+		for (const asset of side1Assets) {
+			expect(await NFT1Contract.ownerOf(asset.tokenId)).to.be.eq(side2.address)
+		}
+
+		const erc20amount = 10000000
+		const side1Erc20Assets = [await mintERC20(erc202Contract, side1.address, erc20amount)]
+		await mintERC20(erc202Contract, side0.address, erc20amount)
+		const results2 = await (await barterContract.connect(side2).createOffer(
+			ethers.constants.AddressZero,
+			side1Assets,
+			side1Erc20Assets, 0
+		)).wait()
+		const offerId2 = results2.events[0].args.offerId
+		await approveNFTS(side2, barterContract.address, NFT1Contract)
+		await approveERC20(erc202Contract, side1, barterContract, erc20amount)
+		await approveERC20(erc202Contract, side0, barterContract, erc20amount) // can use this
+		await (await barterContract.connect(side0).acceptOffer(offerId2)).wait()
+        try {
+			await (await barterContract.connect(side1).acceptOffer(offerId2)).wait()
+            expect(false).to.be.true
+		} catch (e) {
+			expect(e.message.indexOf('Offer status is not pending (canceled or fulfilled)') !== -1).to.be.true
+		}
+	})
+
+	it('Wrong side1 address', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+		let side2 = signers[2]
+
+		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
+		const side1Assets = await mintNFT(NFT1Contract, side1.address, 2)
+		await approveNFTS(side0, barterContract.address, NFT1Contract)
+		await approveNFTS(side1, barterContract.address, NFT1Contract)
+
+		const results = await (await barterContract.createOffer(
+			side2.address,
+			side0Assets,
+			side1Assets, 0
+		)).wait()
+
+		const offerId = results.events[0].args.offerId
+		try {
+			await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+			expect(false).to.be.true
+		} catch (e) {
+			expect(e.message.indexOf('Sender is not offer participant') !== -1).to.be.true
+		}
+		try {
+			await (await barterContract.connect(side2).acceptOffer(offerId)).wait()
+			expect(false).to.be.true
+		} catch (e) {
+			expect(e.message.indexOf('ERC721: transfer of token that is not own') !== -1).to.be.true
+		}
+	})
+    
+	it('Wrong side0 assets', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+		let side2 = signers[2]
+
+		const side1Assets = await mintNFT(NFT1Contract, side1.address, 2)
+		const side2Assets = await mintNFT(NFT1Contract, side2.address, 2)
+		await approveNFTS(side0, barterContract.address, NFT1Contract)
+		await approveNFTS(side1, barterContract.address, NFT1Contract)
+		await approveNFTS(side2, barterContract.address, NFT1Contract)
+
+		const results = await (await barterContract.createOffer(
+			side1.address,
+			side2Assets,
+			side1Assets, 0
+		)).wait()
+
+		const offerId = results.events[0].args.offerId
+		try {
+			await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+			expect(false).to.be.true
+		} catch (e) {
+			expect(e.message.indexOf('ERC721: transfer of token that is not own') !== -1).to.be.true
+		}
+	})
+    
+	it('Missing approvals', async () => {
+		let side0 = signers[0]
+		let side1 = signers[1]
+
+		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
+		const side1Assets = await mintNFT(NFT1Contract, side1.address, 2)
+
+		const results = await (await barterContract.createOffer(
+			side1.address,
+			side0Assets,
+			side1Assets, 0
+		)).wait()
+		const offerId = results.events[0].args.offerId
+		try {
+			await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+			expect(false).to.be.true
+		} catch (e) {
+			expect(e.message.indexOf('ERC721: transfer caller is not owner nor approved') != 1).to.be.true
+		}
+
+		await approveNFTS(side0, barterContract.address, NFT1Contract)
+        
+		try {
+			await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+			expect(false).to.be.true
+		} catch (e) {
+			expect(e.message.indexOf('ERC721: transfer caller is not owner nor approved') != 1).to.be.true
+		}
+		await approveNFTS(side1, barterContract.address, NFT1Contract)
+		await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+		expect(await NFT1Contract.ownerOf(side0Assets[0].tokenId)).to.be.eq(side1.address)
+	})
+
 	it('Accept Empty Sides', async () => {
 		let side0 = signers[0]
 		let side1 = signers[1]
@@ -283,7 +473,7 @@ describe("Bartering", () => {
 		const results = await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			[]
+			[], 0
 		)).wait()
 
 		const offerId = results.events[0].args.offerId
@@ -299,7 +489,7 @@ describe("Bartering", () => {
 		const results2 = await (await barterContract.createOffer(
 			side1.address,
 			[],
-			side0Assets.concat(side1Assets)
+			side0Assets.concat(side1Assets), 0
 		)).wait()
 
 		const offerId2 = results2.events[0].args.offerId
@@ -325,7 +515,7 @@ describe("Bartering", () => {
 		const results = await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets
+			side1Assets, 0
 		)).wait()
 
 		const offerId = results.events[0].args.offerId
@@ -335,7 +525,7 @@ describe("Bartering", () => {
 
 		try {
 			await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
-			expect(true).to.be.true
+			expect(false).to.be.true
 		} catch (e) {
 			expect(e.message.indexOf('Offer status is not pending (canceled or fulfilled)') != 1).to.be.true
 		}
@@ -362,7 +552,7 @@ describe("Bartering", () => {
 		const results = await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets
+			side1Assets, 0
 		)).wait()
 
 		const offerId = results.events[0].args.offerId
@@ -389,7 +579,7 @@ describe("Bartering", () => {
 		const results = await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets
+			side1Assets, 0
 		)).wait()
 
 		const offerId = results.events[0].args.offerId
@@ -417,7 +607,7 @@ describe("Bartering", () => {
 		const results = await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets
+			side1Assets, 0
 		)).wait()
 
 		const offerId = results.events[0].args.offerId
@@ -444,11 +634,11 @@ describe("Bartering", () => {
 		const results = await (await barterContract.createOffer(
 			side1.address,
 			side0Assets,
-			side1Assets
+			side1Assets, 0
 		)).wait()
 
 		const offerId = results.events[0].args.offerId
-		const acceptResults = await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
+		await (await barterContract.connect(side1).acceptOffer(offerId)).wait()
 
 		for (const asset of side0Assets) {
 			expect(await erc1155Contract.balanceOf(side1.address, asset.tokenId)).to.be.eq(amount)
@@ -457,102 +647,6 @@ describe("Bartering", () => {
 			expect(await erc1155Contract.balanceOf(side0.address, asset.tokenId)).to.be.eq(amount)
 		}
 	})
-
-/*
-	it('Verify valid offer', async () => {
-		let side0 = signers[0]
-		let side1 = signers[1]
-
-		const amount = 3
-		const side0Assets = await mintNFT1155(erc1155Contract, side0.address, 1, amount)
-		const side1Assets = await mintNFT1155(erc1155Contract, side1.address, 2, amount)
-		await approveNFTS1155(side0, barterContract.address, erc1155Contract)
-		await approveNFTS1155(side1, barterContract.address, erc1155Contract)
-
-		const results = await (await barterContract.createOffer(
-			side1.address,
-			side0Assets,
-			side1Assets
-		)).wait()
-		const offerId = results.events[0].args.offerId
-		const isValid = await barterContract.validateOffer(offerId)
-		expect(isValid).to.be.true
-	})
-
-	it('Verify invalid offer side0 approval', async () => {
-		let side0 = signers[0]
-		let side1 = signers[1]
-
-		const amount = 3
-		const side0Assets = await mintNFT1155(erc1155Contract, side0.address, 1, amount)
-		const side1Assets = await mintNFT1155(erc1155Contract, side1.address, 2, amount)
-		// await approveNFTS1155(side0, barterContract.address, erc1155Contract)
-		await approveNFTS1155(side1, barterContract.address, erc1155Contract)
-
-		const results = await (await barterContract.createOffer(
-			side1.address,
-			side0Assets,
-			side1Assets
-		)).wait()
-		const offerId = results.events[0].args.offerId
-		try {
-			const isValid = await barterContract.validateOffer(offerId)
-			expect(false).to.be.true
-		} catch (e) {
-			expect(e).to.be.ok
-		}
-	})
-
-	it('Verify invalid offer side1 approval', async () => {
-		let side0 = signers[0]
-		let side1 = signers[1]
-
-		const amount = 3
-		const side0Assets = await mintNFT1155(erc1155Contract, side0.address, 1, amount)
-		const side1Assets = await mintNFT1155(erc1155Contract, side1.address, 2, amount)
-		await approveNFTS1155(side0, barterContract.address, erc1155Contract)
-		//await approveNFTS1155(side1, barterContract.address, erc1155Contract)
-
-		const results = await (await barterContract.createOffer(
-			side1.address,
-			side0Assets,
-			side1Assets
-		)).wait()
-		const offerId = results.events[0].args.offerId
-		try {
-			const isValid = await barterContract.validateOffer(offerId)
-			expect(false).to.be.true
-		} catch (e) {
-			expect(e).to.be.ok
-		}
-	})
-
-	it('Verify invalid offer erc20 balance', async () => {
-		let side0 = signers[0]
-		let side1 = signers[1]
-
-		const amount = 10000
-		const side1Assets = [await mintERC20(erc201Contract, side1.address, amount)]
-		await approveERC20(erc201Contract, side1, barterContract, amount - 10)
-
-		const side0Assets = await mintNFT(NFT1Contract, side0.address, 2)
-		await approveNFTS(side0, barterContract.address, NFT1Contract)
-
-		const results = await (await barterContract.createOffer(
-			side1.address,
-			side0Assets,
-			side1Assets
-		)).wait()
-
-		const offerId = results.events[0].args.offerId
-		try {
-			const isValid = await barterContract.validateOffer(offerId)
-			expect(false).to.be.true
-		} catch (e) {
-			expect(e).to.be.ok
-		}
-	})
-*/
 
 	async function mintNFT (contract, to, count) {
     	const results = []
@@ -604,7 +698,7 @@ describe("Bartering", () => {
 	}
 })
 
-// wrong nfts side1
-// missing approval side0
-// missing approval side1
+// 0x side1 support
+// wrong nfts side
 // Test permissions
+// Test open offers

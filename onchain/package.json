@@ -5,6 +5,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^4.4.0",
     "chai": "^4.3.4",
+    "chokidar-cli": "^3.0.0",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.2",
     "hardhat": "^2.7.0",
@@ -12,10 +13,9 @@
     "solidity-coverage": "^0.7.17",
     "truffle-plugin-verify": "^0.5.20"
   },
-  "dependencies": {
-    "chokidar": "^3.5.2"
-  },
   "scripts": {
-    "deploy-ropsten": "npx hardhat run --network ropsten scripts/deploy-prod.js"
+    "deploy-ropsten": "npx hardhat run --network ropsten scripts/deploy-prod.js",
+    "coverage": "npx hardhat coverage",
+    "test-watch": "chokidar \"contracts/**\" \"test/**\" -c \"npx hardhat test\""
   }
 }

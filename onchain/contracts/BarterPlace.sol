@@ -42,6 +42,7 @@ contract BarterPlace is Ownable {
         OfferStatus status;
         uint256 createdAt;
         uint256 updatedAt;
+        uint256 deadline;
     }
     
     mapping (uint256 => BarterOffer) offersById;
@@ -81,7 +82,8 @@ contract BarterPlace is Ownable {
     function createOffer (
         address side1,
         BarterAsset[] calldata side0Assets,
-        BarterAsset[] calldata side1Assets) payable public {
+        BarterAsset[] calldata side1Assets,
+        uint256 deadline) payable public {
         address side0 = msg.sender;
 
         require(msg.value >= _createOfferFee, "Invalid create offer fee amount");
@@ -93,6 +95,7 @@ contract BarterPlace is Ownable {
         offersById[offerId].side0 = side0;
         offersById[offerId].side1 = side1;
         offersById[offerId].createdAt = block.timestamp;
+        offersById[offerId].deadline = deadline;
         
         for (uint256 i = 0; i < side0Assets.length; ++i) {
             offersById[offerId].side0Assets.push(side0Assets[i]);
@@ -111,22 +114,17 @@ contract BarterPlace is Ownable {
     
     function acceptOffer (uint256 offerId) payable public {
         BarterOffer storage offer = offersById[offerId];
-        require(offer.side1 == msg.sender, 'Sender is not offer participant');
+        require(offer.side1 == address(0) || offer.side1 == msg.sender, 'Sender is not offer participant');
         require(offer.status == OfferStatus.Pending, 'Offer status is not pending (canceled or fulfilled)');
-
+        require(offer.deadline == 0 || block.timestamp <= offer.deadline, 'Offer expired');
         require(msg.value >= _acceptOfferFee, "Invalid accept offer fee amount");
         
-/*
-        _verifyOwnership(offer.side0, offer.side0Assets);
-        _verifyOwnership(offer.side1, offer.side1Assets);
-*/
-        
-        _transferAssets(offer.side0, offer.side1, offer.side0Assets);
-        _transferAssets(offer.side1, offer.side0, offer.side1Assets);
+        _transferAssets(offer.side0, msg.sender, offer.side0Assets);
+        _transferAssets(msg.sender, offer.side0, offer.side1Assets);
         
         offer.status = OfferStatus.Fulfilled;
         offer.updatedAt = block.timestamp;
-        emit OfferAccepted(offer.id, offer.side0, offer.side1);
+        emit OfferAccepted(offer.id, offer.side0, msg.sender);
     }
     
     function cancelOffer (uint256 offerId) public {
@@ -173,47 +171,4 @@ contract BarterPlace is Ownable {
     function getRecentOfferId () public view returns (uint256) {
         return _offerIdCounter.current() - 1;
     }
-/*
-    function _verifyOwnership (address owner, BarterAsset[] storage assets) view internal {
-        for (uint256 i = 0; i < assets.length; ++i) {
-            if (assets[i].assetType == BarterAssetType.ERC721) {
-                IERC721 erc721Contract = IERC721(assets[i].contractAddress);
-                require(
-                    erc721Contract.ownerOf(assets[i].tokenId) == owner,
-                    'Not an owner of ERC721'
-                );
-                require(
-                    erc721Contract.isApprovedForAll(owner, address(this)),
-                    'Missing approval for ERC721'
-                );
-            } else if (assets[i].assetType == BarterAssetType.ERC20) {
-                IERC20 erc20Contract = IERC20(assets[i].contractAddress);
-                require(
-                    erc20Contract.allowance(owner, address(this)) >= assets[i].amount,
-                    'Not enough allowance for ERC20'
-                );
-            } else if (assets[i].assetType == BarterAssetType.ERC1155) {
-                IERC1155 erc1155Contract = IERC1155(assets[i].contractAddress);
-                require(
-                    erc1155Contract.balanceOf(owner, assets[i].tokenId) >= assets[i].amount,
-                    'Insufficient ERC1155 balance'
-                );
-                require(
-                    erc1155Contract.isApprovedForAll(owner, address(this)),
-                    'Missing approval for ECR1155'
-                );
-            }
-        }
-    }
-*/
-/*
-
-    function validateOffer (uint256 offerId) public view returns (bool) {
-        BarterOffer storage offer = offersById[offerId];
-        require(offer.status == OfferStatus.Pending, 'Offer status is not pending (canceled or fulfilled)');
-        _verifyOwnership(offer.side0, offer.side0Assets);
-        _verifyOwnership(offer.side1, offer.side1Assets);
-        return true;
-    }
-*/
 }
