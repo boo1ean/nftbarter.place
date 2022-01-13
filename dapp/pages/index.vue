@@ -47,7 +47,9 @@ v-container
     )
       v-card
         v-card-title Creating barter offer
-        v-card-subtitle {{ stepInstruction }}
+        v-card-subtitle
+          div {{ stepInstruction }}
+          div(v-if="createOfferFee").text--secondary Service fee: {{ createOfferFee }}
         v-card-text
           v-stepper(
             elevation=0
@@ -174,6 +176,9 @@ export default {
         return 'Connect Your Wallet'
       }
       return PageTitles[this.offerState]
+    },
+    createOfferFee () {
+      return this.$store.state.account.fees.createOfferFee
     },
   },
   methods: {

@@ -24,6 +24,10 @@ const initialState = {
   contractsAddresses: {
     barter: null,
   },
+  fees: {
+    createOfferFee: 0,
+    acceptOfferFee: 0,
+  },
 }
 
 export const state = () => ({ ...initialState })
@@ -48,6 +52,9 @@ export const mutations = {
   },
   setOwner (state, value) {
     state.isOwner = value
+  },
+  setFees (state, fees) {
+    state.fees = { ...fees }
   },
 }
 
@@ -81,13 +88,10 @@ export const getters = {
 }
 
 export const actions = {
-  async login ({ commit }) {
-    console.log('account.actions.login')
+  async login ({ dispatch }) {
     try {
-      const web3 = await Moralis.enableWeb3()
-      const address = web3.eth.currentProvider.selectedAddress
-      const chainId = await Moralis.getChainId()
-      commit('setupAccount', { address, chainId })
+      await Moralis.enableWeb3()
+      dispatch('sync')
     } catch (e) {
       console.error('accounts.actions.login', e)
     }
@@ -99,12 +103,20 @@ export const actions = {
     commit('setNfts', nfts.result.map(assignUniqueId))
     commit('setLoadingStatus', false)
   },
-  async fetchAccountOffers ({ commit }) {
+  async fetchAccountOffers ({ state, commit }) {
     const barterContract = await contracts.createBarterContract()
     try {
       const address = this.getters['account/address']
-      const offers = await barterContract.methods.getOffersByAddress(address).call({ from: address })
+      const [offers, createOfferFee, acceptOfferFee] = await Promise.all([
+        barterContract.methods.getOffersByAddress(address).call({ from: address }),
+        barterContract.methods.createOfferFee().call(),
+        barterContract.methods.acceptOfferFee().call(),
+      ])
       commit('setOffers', offers)
+      commit('setFees', {
+        createOfferFee: Moralis.Units.FromWei(createOfferFee) + ` ${state.network.details.currencySymbol}`,
+        acceptOfferFee: Moralis.Units.FromWei(acceptOfferFee) + ` ${state.network.details.currencySymbol}`,
+      })
     } catch (e) {
       console.error('Offers fetch error', e)
       commit('setOffers', [])
@@ -119,7 +131,6 @@ export const actions = {
     commit('setNetwork', network)
   },
   async sync ({ commit, dispatch }) {
-    console.log('account/sync')
     const isConnected = _.get(window, 'web3.currentProvider.selectedAddress', false)
     if (isConnected) {
       const web3 = await Moralis.enableWeb3()

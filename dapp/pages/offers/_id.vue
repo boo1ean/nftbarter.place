@@ -7,6 +7,7 @@ v-container(fluid v-if="isWalletConnected && offer")
   OfferDigest(:offer="offer")
     template(v-slot:actions)
       div(v-if="isOfferPending")
+        div(v-if="isSide1").mb-2.text--secondary Service fee: {{ acceptOfferFee }}
         v-btn(v-if="isSide0" @click="cancelOffer" color="error").mr-3 Cancel
         v-btn(v-if="isSide1" @click="approvePermissionsAndAccept" color="primary") Accept
       div(v-else)
@@ -98,6 +99,9 @@ export default {
         default:
           return 'error'
       }
+    },
+    acceptOfferFee () {
+      return this.$store.state.account.fees.acceptOfferFee
     },
   },
   methods: {
