@@ -50,6 +50,12 @@ module.exports = {
 			gasPrice: 20000000000,
 			accounts: [privateKey],
 		},
+		bscTestnet: {
+			url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+			chainId: 97,
+			gasPrice: 20000000000,
+			accounts: [privateKey],
+		},
 		ropsten: {
 			url: "https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
 			chainId: 3,

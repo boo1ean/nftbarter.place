@@ -21,6 +21,8 @@
     "verify-avalanche-test": "npx hardhat verify --network avalancheFujiTestnet $CONTRACT",
     "deploy-polygon-test": "npx hardhat run --network polygonMumbai scripts/deploy-prod.js",
     "verify-polygon-test": "npx hardhat verify --network polygonMumbai $CONTRACT",
+    "deploy-bsc-test": "npx hardhat run --network bscTestnet scripts/deploy-prod.js",
+    "verify-bsc-test": "npx hardhat verify --network bscTestnet $CONTRACT",
     "coverage": "npx hardhat coverage",
     "test-watch": "chokidar \"contracts/**\" \"test/**\" -c \"npx hardhat test\""
   }
