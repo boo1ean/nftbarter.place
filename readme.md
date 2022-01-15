@@ -26,4 +26,5 @@
 ### Stage 4
 
 - Become DAO
-- All further development will be defined by DAO (may DEX, etc.)
+- Governance contracts system
+- All further development will be defined by DAO
