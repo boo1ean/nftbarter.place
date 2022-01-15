@@ -2,21 +2,6 @@ import _ from 'lodash'
 
 export const networks = [
   {
-    name: 'BSC',
-    chainId: 56,
-    explorerURL: 'https://bscscan.com',
-    chain: 'bsc',
-    color: '#F0B90B',
-    details: {
-      chainId: 56,
-      chainName: 'Binance Smart Chain',
-      currencyName: 'BNB',
-      currencySymbol: 'BNB',
-      rpcUrl: 'https://bsc-dataseed1.ninicoin.io',
-      blockExplorerUrl: 'https://bscscan.com/',
-    },
-  },
-  {
     name: 'Avalanche',
     chainId: 43114,
     explorerURL: 'https://snowtrace.io',
@@ -29,6 +14,21 @@ export const networks = [
       currencySymbol: 'AVAX',
       rpcUrl: 'https://api.avax.network/ext/bc/C/rpc',
       blockExplorerUrl: 'https://cchain.explorer.avax.network/',
+    },
+  },
+  {
+    name: 'Binance Smart Chain',
+    chainId: 56,
+    explorerURL: 'https://bscscan.com',
+    chain: 'bsc',
+    color: '#F0B90B',
+    details: {
+      chainId: 56,
+      chainName: 'Binance Smart Chain',
+      currencyName: 'BNB',
+      currencySymbol: 'BNB',
+      rpcUrl: 'https://bsc-dataseed1.ninicoin.io',
+      blockExplorerUrl: 'https://bscscan.com/',
     },
   },
   {
@@ -47,11 +47,28 @@ export const networks = [
     },
   },
   {
+    name: 'Ethereum Mainnet',
+    chainId: 1,
+    explorerURL: 'https://etherscan.io\',',
+    chain: 'eth',
+    color: '#29b6af',
+    isDefaultInMetamask: true,
+    details: {
+      chainId: 1,
+      chainName: 'Ethereum Mainnet',
+      currencyName: 'ETH',
+      currencySymbol: 'ETH',
+      rpcUrl: 'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
+      blockExplorerUrl: 'https://etherscan.io',
+    },
+  },
+  {
     name: '[TEST] Ropsten',
     chainId: 3,
     explorerURL: 'https://ropsten.etherscan.io',
     chain: 'ropsten',
     color: '#ff4a8d',
+    isDefaultInMetamask: true,
     details: {
       chainId: 3,
       chainName: 'Ropsten Test Network',
@@ -91,10 +108,29 @@ export const networks = [
       blockExplorerUrl: 'https://mumbai.polygonscan.com',
     },
   },
+  {
+    name: '[TEST] Binance Smart Chain',
+    chainId: 97,
+    explorerURL: 'https://testnet.bscscan.com',
+    chain: 'bscTestnet',
+    color: '#F0B90B',
+    details: {
+      chainId: 97,
+      chainName: 'Binance Smart Chain',
+      currencyName: 'tBNB',
+      currencySymbol: 'tBNB',
+      rpcUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+      blockExplorerUrl: 'https://testnet.bscscan.com',
+    },
+  },
 ]
 
 export function getNetworkByChainId (chainId) {
   return _.find(networks, { chainId })
+}
+
+export function getNetworkByAlias (chain) {
+  return _.find(networks, { chain })
 }
 
 export function getCurrentWeb3Network () {

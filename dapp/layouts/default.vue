@@ -95,6 +95,7 @@ v-app
 <script>
 import { mapState, mapActions, mapGetters } from 'vuex'
 import Moralis from '@/utils/moralis'
+
 export default {
   name: 'LayoutDefault',
   data () {
@@ -160,6 +161,20 @@ export default {
       async set (val) {
         try {
           this.isNetworkLoading = true
+          try {
+            if (!val.isDefaultInMetamask) {
+              await Moralis.addNetwork(
+                val.details.chainId,
+                val.details.chainName,
+                val.details.currencyName,
+                val.details.currencySymbol,
+                val.details.rpcUrl,
+                val.details.blockExplorerUrl,
+              )
+            }
+          } catch (e) {
+            console.error('Network add attempt error', e)
+          }
           await Moralis.switchNetwork('0x' + val.chainId.toString(16))
           this.isNetworkLoading = false
           this.selectedNetwork = val

@@ -63,7 +63,7 @@ v-card(elevation=1)
           x-small) Remove
   v-card-actions
     v-row
-      v-col(lg=2 sm=6)
+      v-col(md=3 sm=6)
         v-dialog(v-model="dialog" max-width=920)
           template(v-slot:activator="{ on, attrs }")
             v-btn(
@@ -110,7 +110,7 @@ v-card(elevation=1)
               v-spacer
               v-btn(text @click="dialog = false") Cancel
               v-btn(color="primary" @click="dialog = false") Add
-      v-col(lg=2 sm=6).pl-0
+      v-col(md=3 sm=6).pl-0
         v-dialog(v-model="dialogERC20" max-width=920)
           template(v-slot:activator="{ on, attrs }")
             v-btn(
@@ -124,7 +124,7 @@ v-card(elevation=1)
             @cancel="dialogERC20 = false"
             @save="addERC20"
           )
-      v-col(offset-lg=5 lg=3 sm=12).d-flex.justify-end
+      v-col(offset-md=3 md=3 sm=12).d-flex.justify-end
         v-icon(v-if="confirmed" color="green").mr-2 mdi-check-circle
         v-btn(
           color="success"

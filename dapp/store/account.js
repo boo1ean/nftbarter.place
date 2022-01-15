@@ -4,15 +4,6 @@ import Moralis from '../utils/moralis'
 import contracts from '@/utils/contracts'
 import { networks } from '@/utils/networks'
 
-// await Moralis.addNetwork(
-//     chainId,
-//     chainName,
-//     currencyName,
-//     currencySymbol,
-//     rpcUrl,
-//     blockExplorerUrl
-// );
-
 const initialState = {
   isLoading: false,
   nfts: [],
@@ -160,6 +151,20 @@ export const actions = {
       return
     }
     try {
+      try {
+        if (!network.isDefaultInMetamask) {
+          await Moralis.addNetwork(
+            network.details.chainId,
+            network.details.chainName,
+            network.details.currencyName,
+            network.details.currencySymbol,
+            network.details.rpcUrl,
+            network.details.blockExplorerUrl,
+          )
+        }
+      } catch (e) {
+        console.error('Network add attempt error', e)
+      }
       await Moralis.switchNetwork('0x' + network.chainId.toString(16))
       commit('setNetwork', network)
     } catch (e) {}

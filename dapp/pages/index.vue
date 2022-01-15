@@ -40,7 +40,7 @@ v-container
         @confirm="confirmSide1"
         @dirty="makeSide1Dirty"
       )
-  v-row.flex-grow-0.my-10.pb-10
+  v-row.flex-grow-0.my-md-10.pb-10
     v-col(
       lg=6 offset-lg=3
       sm=12

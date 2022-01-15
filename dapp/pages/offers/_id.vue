@@ -18,7 +18,9 @@ v-container(fluid v-if="isWalletConnected && offer")
       div(v-else)
         v-alert(:type="offerStatusAlertType") This offer is {{ offerStatus }}
 .d-flex.justify-center.align-center.fill-height.flex-column(v-else-if="isWalletConnected && mismatchChain")
-  v-alert(type="error") To see offer you need to change network to {{ requestedChain }}
+  v-alert(type="error")
+    span To see offer you need to change network to&nbsp;
+    b {{ requestedChainName }}
   v-btn(color="primary" @click="changeNetwork") Change network
 .d-flex.justify-center.align-center.fill-height(v-else-if="isWalletConnected && !offer")
   ProgressIndicator
@@ -31,10 +33,10 @@ import ProgressIndicator from '@/components/ProgressIndicator'
 import contracts from '@/utils/contracts'
 import { AssetType } from '@/utils/enums'
 import { toBN } from '@/utils/utils'
+import { getNetworkByAlias } from '@/utils/networks'
 
 export default {
   name: 'OfferDetails',
-  middleware: 'auth',
   components: {
     ProgressIndicator,
   },
@@ -116,6 +118,11 @@ export default {
     },
     isOfferExpired () {
       return +this.offer.deadline > 0 && ((new Date().getTime()) > (new Date(this.offer.deadline * 1000).getTime()))
+    },
+    requestedChainName () {
+      const network = getNetworkByAlias(this.requestedChain)
+      console.log(network)
+      return network.name
     },
   },
   methods: {
