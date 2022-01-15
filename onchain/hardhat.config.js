@@ -1,7 +1,9 @@
-require("@nomiclabs/hardhat-waffle")
-require("hardhat-gas-reporter")
+require('@nomiclabs/hardhat-waffle')
+require('hardhat-gas-reporter')
 require('solidity-coverage')
-const { privateKey } = require('./.secret.json')
+require('@nomiclabs/hardhat-etherscan')
+
+const { privateKey, etherscan } = require('./.secret.json')
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -54,17 +56,44 @@ module.exports = {
 			gasPrice: 20000000000,
 			accounts: [privateKey],
 		},
-		avax: {
+		avalanche: {
 			url: "https://api.avax.network/ext/bc/C/rpc",
 			chainId: 43114,
 			gasPrice: 20000000000,
 			accounts: [privateKey],
 		},
-		matic: {
+		avalancheFujiTestnet: {
+			url: "https://api.avax-test.network/ext/bc/C/rpc",
+			chainId: 43113,
+			gasPrice: 25000000000,
+			accounts: [privateKey],
+		},
+		polygon: {
 			url: "https://polygon-rpc.com",
 			chainId: 137,
 			gasPrice: 20000000000,
 			accounts: [privateKey],
 		},
+		polygonMumbai: {
+			url: "https://matic-mumbai.chainstacklabs.com",
+			chainId: 80001,
+			gasPrice: 20000000000,
+			accounts: [privateKey],
+		},
 	},
+	etherscan: {
+		apiKey: {
+			mainnet: "YOUR_ETHERSCAN_API_KEY",
+			ropsten: etherscan.ropsten,
+            
+			bsc: etherscan.bsc,
+			bscTestnet: etherscan.bscTestnet,
+            
+			polygon: etherscan.polygon,
+			polygonMumbai: etherscan.polygonMumbai,
+            
+			avalanche: etherscan.avalanche,
+			avalancheFujiTestnet: etherscan.avalancheFujiTestnet,
+		}
+	}
 }
