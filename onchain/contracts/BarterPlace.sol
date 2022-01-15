@@ -118,12 +118,13 @@ contract BarterPlace is Ownable {
         require(offer.status == OfferStatus.Pending, 'Offer status is not pending (canceled or fulfilled)');
         require(offer.deadline == 0 || block.timestamp <= offer.deadline, 'Offer expired');
         require(msg.value >= _acceptOfferFee, "Invalid accept offer fee amount");
+
+        offer.status = OfferStatus.Fulfilled;
+        offer.updatedAt = block.timestamp;
         
         _transferAssets(offer.side0, msg.sender, offer.side0Assets);
         _transferAssets(msg.sender, offer.side0, offer.side1Assets);
         
-        offer.status = OfferStatus.Fulfilled;
-        offer.updatedAt = block.timestamp;
         emit OfferAccepted(offer.id, offer.side0, msg.sender);
     }
     
