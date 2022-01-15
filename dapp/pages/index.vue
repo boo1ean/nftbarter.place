@@ -50,19 +50,35 @@ v-container
         v-card-subtitle.pb-0
           div {{ stepInstruction }}
           div(v-if="createOfferFee").text--secondary Service fee: {{ createOfferFee }}
-        v-card-text.pb-0
+        v-card-text.pb-0.mt-2
           .d-flex.mb-2
             v-checkbox(
               label="Has deadline"
+              v-model="hasDeadline"
               hide-details
             ).mt-1
             v-text-field(
+              v-model="deadlineValue"
+              v-if="hasDeadline"
               type="number"
               label="Days"
               hide-details
               solo
               dense
-            ).flex-grow-0.ml-4
+            ).flex-grow-0.ml-4.deadline-value
+            v-select(
+              v-if="hasDeadline"
+              v-model="deadlineUnitsType"
+              :items="deadlineUnits"
+              item-text="label"
+              return-object
+              dense
+              hide-details
+              solo
+            ).flex-grow-0.ml-4.deadline-units
+          div(v-if="hasDeadline")
+            b Offer expires:&nbsp;
+            span {{ deadlineTimestampFormatted }}
           v-stepper(
             elevation=0
             v-model="offerState"
@@ -99,11 +115,17 @@ v-container
 .height-100 {
   height: 100%;
 }
+.deadline-value {
+  max-width: 120px;
+}
+.deadline-units {
+  max-width: 120px;
+}
 </style>
 
 <script>
 import _ from 'lodash'
-import { mapState, mapActions, mapGetters } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 import Moralis from 'moralis'
 import NFTMetadata from '../components/NFTMetadata'
 import BarterSide from '../components/BarterSide'
@@ -163,6 +185,14 @@ export default {
       pendingOffer: null,
       isLoading: false,
       loadingText: 'Waiting for transaction to complete',
+      hasDeadline: false,
+      deadlineValue: 7,
+      deadlineUnitsType: { label: 'days', value: 60 * 60 * 24 },
+      deadlineUnits: [
+        { label: 'days', value: 60 * 60 * 24 },
+        { label: 'hours', value: 60 * 60 },
+        { label: 'minutes', value: 60 },
+      ],
     }
   },
   computed: {
@@ -192,9 +222,15 @@ export default {
     createOfferFee () {
       return this.$store.state.account.fees.createOfferFee
     },
+    deadlineTimestamp () {
+      const timestamp = Math.round(new Date().getTime() / 1000)
+      return timestamp + this.deadlineUnitsType.value * this.deadlineValue
+    },
+    deadlineTimestampFormatted () {
+      return new Date(this.deadlineTimestamp * 1000).toLocaleString()
+    },
   },
   methods: {
-    ...mapActions('account', ['fetchAccountNFTS']),
     addOfferNFTs () {
       this.offer.items = [...this.offer.items, ...this.offer.dialogSelected]
       this.offer.dialogSelected = []
@@ -264,11 +300,13 @@ export default {
             from: this.pendingOffer.side0,
           }
           try {
+            const deadline = this.hasDeadline ? this.deadlineTimestamp : 0
             const result = await barterContract.methods
               .createOffer(
                 this.pendingOffer.side1,
                 this.pendingOffer.side0Assets.map(amountToString),
                 this.pendingOffer.side1Assets.map(amountToString),
+                deadline,
               )
               .send(options)
             function amountToString (a) {

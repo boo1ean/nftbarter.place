@@ -64,14 +64,18 @@ export const getters = {
   },
   incomingOffers (state, getters) {
     const address = getters.address
-    return state.offers.filter(o => +o.status === 0 && o.side1.toLowerCase() === address)
+    return getters.pendingOffers.filter(o => o.side1.toLowerCase() === address)
   },
   outgoingOffers (state, getters) {
     const address = getters.address
-    return state.offers.filter(o => +o.status === 0 && o.side0.toLowerCase() === address)
+    console.log(getters.pendingOffers)
+    return getters.pendingOffers.filter(o => o.side0.toLowerCase() === address)
   },
   pendingOffers (state) {
-    return state.offers.filter(o => +o.status === 0)
+    const currentTime = new Date().getTime()
+    return state.offers.filter((o) => {
+      return +o.status === 0 && ((+o.deadline === 0) || (new Date(+o.deadline * 1000).getTime() > currentTime))
+    })
   },
   chain (state) {
     return _.get(state, 'network.chain')
@@ -84,6 +88,9 @@ export const getters = {
   },
   barterContractAddress (state) {
     return state.contractsAddresses.barter
+  },
+  chainIdHex (state) {
+    return '0x' + state.network.chainId.toString(16)
   },
 }
 

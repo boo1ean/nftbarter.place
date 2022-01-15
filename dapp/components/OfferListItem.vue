@@ -18,6 +18,10 @@
           td.pr-3
             b Swap
           td {{ swapDigest }}
+        tr(v-if="deadlineFormatted")
+          td.pr-3
+            b Expires at
+          td {{ deadlineFormatted }}
     v-card-actions
       v-btn(
         nuxt
@@ -30,7 +34,7 @@ export default {
   props: ['offer'],
   computed: {
     chain () {
-      return this.$store.state.account.network.chain
+      return this.$store.getters['account/chain']
     },
     swapDigest () {
       const side0nfts = this.offer.side0Assets.filter(a => +a.assetType === 0)
@@ -58,6 +62,12 @@ export default {
         result.push('Nothing')
       }
       return result.join(' ')
+    },
+    deadlineFormatted () {
+      if (+this.offer.deadline > 0) {
+        return new Date(this.offer.deadline * 1000).toLocaleString()
+      }
+      return false
     },
   },
 }

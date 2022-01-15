@@ -85,12 +85,16 @@ export default {
       console.log('Already have address')
       this.isLoading = true
       const options = {
-        chain: this.$store.state.account.network.chain,
+        chain: this.$store.getters['account/chainIdHex'],
         address: this.address,
       }
-      this.tokenBalances = await Moralis.Web3API.account.getTokenBalances(options)
+      try {
+        this.tokenBalances = await Moralis.Web3API.account.getTokenBalances(options)
+      } catch (e) {
+        console.error('Failed to fetch balances', e)
+        this.tokenBalances = []
+      }
       this.isLoading = false
-      console.log(this.tokenBalances)
     }
   },
   data () {
@@ -144,7 +148,7 @@ export default {
 
       if (this.customTokenAddress && this.customTokenAmount) {
         const options = {
-          chain: this.$store.state.account.network.chain,
+          chain: this.$store.getters['account/chainIdHex'],
           addresses: this.customTokenAddress,
         }
         const [token] = await Moralis.Web3API.token.getTokenMetadata(options)

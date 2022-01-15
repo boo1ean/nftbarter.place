@@ -237,12 +237,18 @@ export default {
         return
       }
       const options = {
-        chain: this.$store.state.account.network.chain,
+        chain: this.$store.getters['account/chainIdHex'],
         address: this.dynamicAddress,
       }
       this.isLoading = true
-      const nfts = await Moralis.Web3API.account.getNFTs(options)
-      this.items = nfts.result.map(assignUniqueId)
+      try {
+        const nfts = await Moralis.Web3API.account.getNFTs(options)
+        this.items = nfts.result.map(assignUniqueId).filter(item => item.contract_type === 'ERC721')
+      } catch (e) {
+        console.error('failed to fetch nfts', e)
+        this.items = []
+      }
+
       this.isLoading = false
     },
     confirm () {

@@ -108,7 +108,7 @@ export default {
         const options = {
           address: nft.contractAddress,
           token_id: nft.tokenId,
-          chain: this.$store.state.account.network.chain,
+          chain: this.$store.getters['account/chainIdHex'],
         }
         nftsPromises.push(Moralis.Web3API.token.getTokenIdMetadata(options))
         // TODO add erc1155 support
@@ -147,7 +147,7 @@ export default {
       for (const erc20 of erc20s) {
         const options = {
           addresses: erc20.contractAddress,
-          chain: this.$store.state.account.network.chain,
+          chain: this.$store.getters['account/chainIdHex'],
         }
         erc20Promises.push(Moralis.Web3API.token.getTokenMetadata(options).then(([token]) => {
           return {
