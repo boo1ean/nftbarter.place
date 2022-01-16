@@ -1,5 +1,5 @@
 <template lang="pug">
-v-container(fluid v-if="isWalletConnected && offer")
+v-container(v-if="isWalletConnected && offer")
   v-overlay(v-if="isLoading")
     v-alert(color="white" elevation=1)
       span.black-text {{ loadingText }}
@@ -57,8 +57,7 @@ export default {
   },
   watch: {
     'account.network' () {
-      console.log('network changed')
-      this.fetchOffer()
+      setTimeout(() => this.fetchOffer(), 500)
     },
   },
   computed: {
@@ -212,6 +211,7 @@ export default {
         this.isLoading = false
       }
       if (didGetAllApprovals) {
+        this.fetchOffer()
         this.acceptOffer()
       } else {
         this.isLoading = false

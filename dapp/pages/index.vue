@@ -1,11 +1,10 @@
 <template lang="pug">
 v-container
-  v-sheet(
+  v-alert(
     v-if="!isWalletConnected"
     elevation=1
     color="blue-grey lighten-2"
-    shaped
-  ).py-6.mb-4.d-flex.justify-center.align-center.flex-column.hello
+  ).py-6.mb-4.d-flex.justify-center.align-center.flex-column.hello.text-center
     div
       span.hello Welcome to&nbsp;
       b.hello nftbarter.place

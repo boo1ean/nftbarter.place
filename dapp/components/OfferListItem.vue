@@ -9,11 +9,13 @@
         tr
           td.pr-3
             b From
-          td {{ offer.side0 }}
+          td
+            ContractLink(:address="offer.side0")
         tr
           td.pr-3
             b To
-          td {{ offer.side1 }}
+          td
+            ContractLink(:address="offer.side1")
         tr
           td.pr-3
             b Swap
@@ -29,9 +31,13 @@
       ) OPEN DETAILS
 </template>
 <script>
+import ContractLink from '@/components/ContractLink'
 export default {
   name: 'OfferListItem',
   props: ['offer'],
+  components: {
+    ContractLink,
+  },
   computed: {
     chain () {
       return this.$store.getters['account/chain']
