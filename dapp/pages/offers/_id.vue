@@ -196,7 +196,7 @@ export default {
               const allowance = await contract.methods.allowance(this.offer.side1, barterContractAddress).call({ from: this.offer.side1 })
               if (toBN(allowance).cmp(toBN(asset.amount)) === -1 || confirm('You already have allowance, need more?')) {
                 this.loadingText = 'Waiting for ERC20 approval transaction to complete'
-                await contract.methods.approve(barterContractAddress, asset.amount).send({ from: this.offer.side1 })
+                await contract.methods.approve(barterContractAddress, toBN(asset.amount)).send({ from: this.offer.side1 })
               }
               break
             }

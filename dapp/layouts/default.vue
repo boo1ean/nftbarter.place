@@ -118,6 +118,11 @@ export default {
           icon: 'mdi-help-circle',
           to: '/faq',
         },
+        {
+          title: 'Roadmap',
+          icon: 'mdi-map',
+          to: '/roadmap',
+        },
       ],
       drawer: false,
       selectedNetwork: null,
