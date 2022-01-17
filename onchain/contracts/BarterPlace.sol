@@ -76,9 +76,6 @@ contract BarterPlace is Ownable {
         to.transfer(address(this).balance);
     }
     
-    // Barter between side0 and side1 addresses
-    // side0 - msg.sender
-    // side1 - specified in call
     function createOffer (
         address side1,
         BarterAsset[] calldata side0Assets,
