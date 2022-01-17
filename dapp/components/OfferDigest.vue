@@ -6,7 +6,7 @@ div
         :color="isSide0 ? 'amber lighten-5' : 'white'"
         elevation=1
       )
-        v-card-title {{ isSide0 ? 'YOUR SIDE' : 'NOT YOUR SIDE' }}
+        v-card-title {{ isSide0 ? 'YOU GIVE' : 'YOU GET' }}
         v-card-subtitle
           ContractLink(:address="offer.side0" full="true")
         v-card-text
@@ -16,7 +16,7 @@ div
         :color="isSide1 ? 'amber lighten-5' : 'white'"
         elevation=1
       )
-        v-card-title {{ isSide1 ? 'YOUR SIDE' : 'NOT YOUR SIDE' }}
+        v-card-title {{ isSide1 ? 'YOU GIVE' : 'YOU GET' }}
         v-card-subtitle
           ContractLink(:address="offer.side1" full="true")
         v-card-text

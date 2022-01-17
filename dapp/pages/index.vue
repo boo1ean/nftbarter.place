@@ -28,14 +28,14 @@ v-container
   v-row(v-show="offerState === 0").flex-grow-0
     v-col(sm=12 lg=6)
       BarterSide(
-        label="Your offer"
+        label="YOU GIVE"
         :address="address"
         @confirm="confirmSide0"
         @dirty="makeSide0Dirty"
       )
     v-col(sm=12 lg=6)
       BarterSide(
-        label="Your expectations"
+        label="YOU GET"
         @confirm="confirmSide1"
         @dirty="makeSide1Dirty"
       )
@@ -309,8 +309,10 @@ export default {
               )
               .send(options)
             function amountToString (a) {
-              a.amount = '0x' + a.amount.toString(16)
-              return a
+              return {
+                ...a,
+                amount: '0x' + a.amount.toString(16),
+              }
             }
             const offerId = result.events.OfferCreated.returnValues.offerId
             this.isLoading = false

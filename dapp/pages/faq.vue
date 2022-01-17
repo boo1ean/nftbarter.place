@@ -23,19 +23,22 @@ export default {
         {
           q: 'How does it work?',
           a: `
-          <ol>
-            <li> Connect wallet</li>
-            <li> Select assets you want to exchange (erc721 or erc20 tokens)</li>
-            <li> Specify counterparty address</li>
-            <li> Select counterparty assets you want to get</li>
-            <li> Press continue and review your offer (check contract addresses carefully and token ids closely).</li>
-            <li> Allow barter contract to manage your selected assets (assets won't be moved until the counter-side accepts the offer).</li>
-            <li> Press create offer button (creates an offer using barter contract).</li>
-            <li> Wait for the offer creation transaction to complete and get the offer link.</li>
-            <li> Send an offer link to your counterparty.</li>
-            <li> Counterparty opens the link connects wallet and accepts the offer.</li>
-            <li> Exchange is completed!</li>
-          </ol>
+          <div>
+            <a href="https://www.youtube.com/watch?v=SzqaSZR6oyQ&ab_channel=nftbarterplace" target="_blank">Youtube video demonstrating Create & Accept offer flow</a>
+            <ol class="mt-2">
+              <li> Connect wallet</li>
+              <li> Select assets you want to exchange (erc721 or erc20 tokens)</li>
+              <li> Specify counterparty address</li>
+              <li> Select counterparty assets you want to get</li>
+              <li> Press continue and review your offer (check contract addresses carefully and token ids closely).</li>
+              <li> Allow barter contract to manage your selected assets (assets won't be moved until the counter-side accepts the offer).</li>
+              <li> Press create offer button (creates an offer using barter contract).</li>
+              <li> Wait for the offer creation transaction to complete and get the offer link.</li>
+              <li> Send an offer link to your counterparty.</li>
+              <li> Counterparty opens the link connects wallet and accepts the offer.</li>
+              <li> Exchange is completed!</li>
+            </ol>
+          </div>
     `,
         },
         {

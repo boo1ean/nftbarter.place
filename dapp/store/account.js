@@ -23,6 +23,7 @@ const initialState = {
 
 export const state = () => ({ ...initialState })
 
+let usableConnectRetries = 5
 export const mutations = {
   setNfts (state, nfts) {
     state.nfts = nfts
@@ -129,7 +130,7 @@ export const actions = {
     commit('setNetwork', network)
   },
   async sync ({ commit, dispatch }) {
-    const isConnected = _.get(window, 'web3.currentProvider.selectedAddress', false)
+    const isConnected = _.get(window, 'ethereum.selectedAddress', false)
     if (isConnected) {
       const web3 = await Moralis.enableWeb3()
       const address = web3.eth.currentProvider.selectedAddress
@@ -143,6 +144,10 @@ export const actions = {
       } catch (e) {
         console.error('Contract interaction failed')
       }
+    } else if (usableConnectRetries > 0) {
+      // This is garbage for reconnected in deployed app
+      usableConnectRetries--
+      setTimeout(() => dispatch('sync'), 300)
     }
   },
   async ensureChain ({ commit }, chain) {

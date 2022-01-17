@@ -1,7 +1,7 @@
 <template lang="pug">
 ProgressIndicator(v-if="isLoading")
 .d-flex.align-center.justify-center(v-else-if="!nftAssets.length && !erc20Assets.length")
-  v-alert(type="warning") No assets on this side
+  v-alert(type="warning") Nothing
 div(v-else)
   div(v-if="nftAssets.length").mb-4
     h2.mb-6 NFTs
