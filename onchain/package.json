@@ -17,6 +17,8 @@
   "scripts": {
     "deploy-ropsten": "npx hardhat run --network ropsten scripts/deploy-prod.js",
     "verify-ropsten": "npx hardhat verify --network ropsten $CONTRACT",
+    "deploy-mainnet": "npx hardhat run --network mainnet scripts/deploy-prod.js",
+    "verify-mainnet": "npx hardhat verify --network mainnet $CONTRACT",
     "deploy-avalanche-test": "npx hardhat run --network avalancheFujiTestnet scripts/deploy-prod.js",
     "verify-avalanche-test": "npx hardhat verify --network avalancheFujiTestnet $CONTRACT",
     "deploy-avalanche": "npx hardhat run --network avalanche scripts/deploy-prod.js",

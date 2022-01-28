@@ -75,6 +75,12 @@ module.exports = {
 		localhost: {
 			url: "http://127.0.0.1:8545"
 		},
+        mainnet: {
+			url: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+			chainId: 1,
+			gasPrice: 20000000000,
+			accounts: [privateKey],
+		},
 		bsc: {
 			url: "https://bsc-dataseed.binance.org/",
 			chainId: 56,
@@ -120,7 +126,7 @@ module.exports = {
 	},
 	etherscan: {
 		apiKey: {
-			mainnet: "YOUR_ETHERSCAN_API_KEY",
+			mainnet: etherscan.ropsten,
 			ropsten: etherscan.ropsten,
             
 			bsc: etherscan.bsc,
