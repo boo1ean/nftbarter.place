@@ -12,6 +12,10 @@ v-container(v-if="isWalletConnected && offer")
           b {{ formattedDeadline }}
         v-alert(v-if="isOfferExpired" type="error").mb-2
           span This offer is expired
+        v-alert(v-if="isSide1" type="warning").mb-2
+          div YOU ARE TAKING PART IN P2P NFT SWAP.
+          div MAKE SURE THAT TOKEN CONTRACT ADDRESSES ARE CORRECT.
+          div IT'S ON YOUR SIDE TO VERIFY IF TOKENS ARE VALID.
         div(v-if="isSide1").mb-2.text--secondary Service fee: {{ acceptOfferFee }}
         v-btn(v-if="isSide0" @click="cancelOffer" color="error").mr-3 Cancel
         v-btn(v-if="isSide1" @click="approvePermissionsAndAccept" color="primary") Accept
@@ -57,7 +61,7 @@ export default {
   },
   watch: {
     'account.network' () {
-      setTimeout(() => this.fetchOffer(), 500)
+      setTimeout(() => this.fetchOffer(), 2000)
     },
   },
   computed: {

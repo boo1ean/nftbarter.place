@@ -57,7 +57,7 @@ export default {
           <div>
             Currently supported chains:<br />
             <ul>
-              ${networks.map(n => `<li>${n.name}</li>`).join('')}
+              ${networks.map(n => contractsConfig.BarterPlace[n.chain] ? `<li>${n.name}</li>` : '').join('')}
             </ul>
           </div>
         `,
@@ -70,9 +70,7 @@ export default {
             <tr>
                 <td><b>${n.name}</b></td>
                 <td class="pl-4">
-                    <a href="${n.explorerURL}/address/${contractsConfig.BarterPlace[n.chain]}" target="_blank">
-                      ${contractsConfig.BarterPlace[n.chain]}
-                    </a>
+                    ${contractsConfig.BarterPlace[n.chain] ? `<a href="${n.explorerURL}/address/${contractsConfig.BarterPlace[n.chain]}" target="_blank">${contractsConfig.BarterPlace[n.chain]} </a>` : 'not supported yet'}
                 </td>
             </tr>
             `).join('')}

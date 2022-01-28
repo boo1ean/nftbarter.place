@@ -16,6 +16,7 @@
             v-card-title Stage 1
             v-card-text
               ul
+                li Gas-free offer creation
                 li Marketplace
                 li Additional EVM networks support (Fantom, Optimism, Arbitrum, etc.)
         v-timeline-item
